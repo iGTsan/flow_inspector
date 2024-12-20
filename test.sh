@@ -3,4 +3,4 @@
 cd build
 cmake ..
 cmake --build .
-ctest
+ctest --output-on-failure

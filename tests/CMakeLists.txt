@@ -7,7 +7,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(googletest)
 
-add_executable(runTests test_1.cpp)
+add_executable(runTests test_1.cpp internal_structs_test.cpp)
 
 target_link_libraries(runTests GTest::gtest GTest::gtest_main TrafficAnalyzerLibrary)
 

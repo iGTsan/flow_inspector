@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <fstream>
 #include <queue>
 #include <string>
@@ -9,30 +10,35 @@
 #include <ctime>
 #include <memory>
 #include <chrono>
+#include <optional>
 #include <cstdint>
 
 
 namespace flow_inspector::internal {
 
 
-class Packet {
-public:
-  Packet(const ::std::vector<uint8_t>& data) noexcept
-    : uint8_ts_{data}
+using byte = uint8_t;
+
+
+struct Packet {
+  Packet(const ::std::vector<byte>& data) noexcept
+    : bytes_{data}
   {}
 
   ::std::string toString() const noexcept {
     ::std::stringstream ss;
     ss << "[";
-    for (const auto& b : uint8_ts_) {
-      ss << static_cast<int>(b) << " ";
+    for (auto it = bytes_.begin(); it != bytes_.end(); ++it) {
+      if (it != bytes_.begin()) {
+        ss << " ";
+      }
+      ss << static_cast<int>(*it);
     }
     ss << "]";
     return ss.str();
   }
 
-private:
-  ::std::vector<uint8_t> uint8_ts_;
+  ::std::vector<byte> bytes_;
 };
 
 
@@ -60,7 +66,34 @@ struct LogEntry {
 
 
 class Rule {};
-class Signature {};
+
+
+class Signature {
+  public:
+    Signature(const ::std::vector<byte>& payload) noexcept
+      : payload_(payload)
+    {}
+
+    Signature(const ::std::vector<byte>& payload, const uint32_t payload_offset) noexcept
+      : payload_(payload)
+      , payload_offset_(payload_offset)
+    {}
+
+    bool Check(const Packet& packet) const noexcept {
+      if (payload_offset_) {
+        return *payload_offset_ + payload_.size() <= packet.bytes_.size() &&
+          ::std::equal(payload_.begin(), payload_.end(), packet.bytes_.begin() + *payload_offset_);
+      }
+      return ::std::search(packet.bytes_.begin(), packet.bytes_.end(),
+        payload_.begin(), payload_.end()) != packet.bytes_.end();
+    }
+
+  private:
+    ::std::vector<byte> payload_;
+    ::std::optional<uint32_t> payload_offset_;
+};
+
+
 class Event {};
 
 
