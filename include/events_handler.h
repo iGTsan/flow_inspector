@@ -14,7 +14,7 @@ public:
   {}
 
   void sendAlert(const internal::Alert& alert) {
-    logger_.logAlert(std::make_shared<internal::Alert>(alert));
+    logger_.logAlert(::std::make_shared<internal::Alert>(alert));
     // Реализация отправки уведомления
   }
 

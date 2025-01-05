@@ -48,7 +48,7 @@ TEST(SignatureTest, ConstructorWithEmptyPayload) {
   Signature signature(emptyPayload);
   
   Packet packet({1, 2, 3, 4, 5});
-  EXPECT_TRUE(signature.Check(packet));
+  EXPECT_TRUE(signature.check(packet));
 }
 
 
@@ -57,10 +57,10 @@ TEST(SignatureTest, ConstructorWithNonEmptyPayload) {
   Signature signature(payload);
   
   Packet packet({0, 1, 2, 3, 4, 5, 6});
-  EXPECT_TRUE(signature.Check(packet));
+  EXPECT_TRUE(signature.check(packet));
   
   Packet nonMatchingPacket({0, 1, 2, 3, 6, 7, 8});
-  EXPECT_FALSE(signature.Check(nonMatchingPacket));
+  EXPECT_FALSE(signature.check(nonMatchingPacket));
 }
 
 
@@ -70,13 +70,13 @@ TEST(SignatureTest, ConstructorWithPayloadAndOffset) {
   Signature signature(payload, offset);
   
   Packet matchingPacket({1, 2, 3, 4, 5});
-  EXPECT_TRUE(signature.Check(matchingPacket));
+  EXPECT_TRUE(signature.check(matchingPacket));
   
   Packet nonMatchingPacket({1, 1, 2, 3, 4, 5});
-  EXPECT_FALSE(signature.Check(nonMatchingPacket));
+  EXPECT_FALSE(signature.check(nonMatchingPacket));
   
   Packet shortPacket({1, 2});
-  EXPECT_FALSE(signature.Check(shortPacket));
+  EXPECT_FALSE(signature.check(shortPacket));
 }
 
 
@@ -86,7 +86,7 @@ TEST(SignatureTest, CheckWithOffsetBeyondPacketSize) {
   Signature signature(payload, offset);
   
   Packet packet({1, 2, 3, 4, 5});
-  EXPECT_FALSE(signature.Check(packet));
+  EXPECT_FALSE(signature.check(packet));
 }
 
 
