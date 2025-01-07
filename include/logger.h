@@ -19,15 +19,28 @@ public:
     logEntries_.push_back(entry);
   }
 
-  void logPacket(::std::shared_ptr<const internal::Packet> packet) noexcept {
-    logEvent(internal::LogEntry{::std::time(nullptr), packet, nullptr});
+  void logPacket(internal::Packet packet) noexcept {
+    logEvent(internal::LogEntry{
+      .timestamp = getTime(),
+      .packet = ::std::move(packet),
+    });
   }
 
-  void logAlert(::std::shared_ptr<const internal::Alert> alert) noexcept {
-    logEvent(internal::LogEntry{::std::time(nullptr), nullptr, alert});
+  void logAlert(internal::Alert alert) noexcept {
+    logEvent(internal::LogEntry{
+      .timestamp = getTime(),
+      .alert = ::std::move(alert),
+    });
   }
 
-  ::std::string exportLog() const noexcept {
+  void logMessage(::std::string message) noexcept {
+    logEvent(internal::LogEntry{
+      .timestamp = getTime(),
+      .message = ::std::move(message),
+    });
+  }
+
+  ::std::string exportLogs() const noexcept {
     ::std::stringstream ss;
     for (const internal::LogEntry& entry : logEntries_) {
       ss << entry.timestamp << " ";
@@ -37,19 +50,27 @@ public:
       if (entry.alert) {
           ss << "Alert: " << entry.alert->toString() << " ";
       }
+      if (entry.message) {
+          ss << "Message: " << *entry.message << " ";
+      }
       ss << "\n";
     }
+    std::cout << ss.str() << "\n";
     return ss.str();
   }
 
   void exportLogs(const ::std::string& filename) const noexcept {
     ::std::ofstream file(filename);
     if (file.is_open()) {
-      file << exportLog();
+      file << exportLogs();
       file.close();
     } else {
       std::cerr << "Error opening file: " << filename << "\n";
     }
+  }
+
+  static ::std::time_t getTime() noexcept {
+    return ::std::time(nullptr);
   }
 
 private:

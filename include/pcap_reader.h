@@ -16,7 +16,7 @@ namespace flow_inspector {
 
 class PcapReader {
 public:
-  using PacketProcessor = ::std::function<void(::std::shared_ptr<const internal::Packet>)>;
+  using PacketProcessor = ::std::function<void(const internal::Packet&)>;
 
   void setProcessor(PacketProcessor processor) noexcept {
     packet_processor_ = ::std::move(processor);
@@ -41,9 +41,9 @@ public:
         ::std::vector<internal::byte> payload{
             reinterpret_cast<const internal::byte*>(packet), 
             reinterpret_cast<const internal::byte*>(packet) + header.caplen};
-        packet_processor_(::std::make_shared<const internal::Packet>(
-          payload
-        ));
+        packet_processor_(internal::Packet{
+          payload,
+        });
     }
 
     pcap_close(handle);

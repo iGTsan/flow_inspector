@@ -1,5 +1,9 @@
 #pragma once
 
+#include <functional>
+#include <unordered_map>
+#include <vector>
+
 #include "internal_structs.h"
 #include "logger.h"
 
@@ -9,26 +13,35 @@ namespace flow_inspector {
 
 class EventsHandler {
 public:
+  using EventCallback = ::std::function<void(const internal::Event&)>;
+
   EventsHandler(Logger& logger) noexcept
     : logger_{logger}
-  {}
-
-  void sendAlert(const internal::Alert& alert) {
-    logger_.logAlert(::std::make_shared<internal::Alert>(alert));
-    // Реализация отправки уведомления
+  {
+    addEventCallback(internal::Event::EventType::Alert,
+        [this](const internal::Event& event) {
+          internal::Alert alert("Rule " + event.rule.getName() + " was matched.");
+          logger_.logEvent(internal::LogEntry{
+            .timestamp = logger_.getTime(),
+            .packet = event.packet,
+            .alert = alert,
+          });
+        });
   }
 
-  void blockTraffic(const internal::Packet& /*packet*/) {
-    // Реализация блокировки трафика
+  void addEventCallback(const internal::Event::EventType type, const EventCallback& callback) {
+    callbacks_[type].push_back(callback);
   }
 
   void addEvent(const internal::Event& event) {
-    eventsList_.push(event);
+    for (const auto& callback : callbacks_[event.type]) {
+      callback(event);
+    }
   }
   
 private:
-    ::std::queue<internal::Event> eventsList_;
-    Logger& logger_;
+  ::std::unordered_map<internal::Event::EventType, ::std::vector<EventCallback>> callbacks_;
+  Logger& logger_;
 };
 
 
