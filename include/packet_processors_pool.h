@@ -23,9 +23,9 @@ private:
 
 class PacketProcessorsPool {
 public:
-  PacketProcessorsPool(Analyzer& analyzer, const uint8_t numPacketProcessors) noexcept
+  PacketProcessorsPool(Analyzer& analyzer, const uint8_t num_packet_processors) noexcept
   {
-    for (uint8_t i = 0; i < numPacketProcessors; ++i) {
+    for (uint8_t i = 0; i < num_packet_processors; ++i) {
       processors_.emplace_back(analyzer);
     }
   }

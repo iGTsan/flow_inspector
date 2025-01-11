@@ -16,7 +16,7 @@ namespace flow_inspector {
 class Logger {
 public:
   void logEvent(const internal::LogEntry& entry) noexcept {
-    logEntries_.push_back(entry);
+    log_entries_.push_back(entry);
   }
 
   void logPacket(internal::Packet packet) noexcept {
@@ -34,6 +34,7 @@ public:
   }
 
   void logMessage(::std::string message) noexcept {
+    ::std::cout << message << ::std::endl;
     logEvent(internal::LogEntry{
       .timestamp = getTime(),
       .message = ::std::move(message),
@@ -42,7 +43,7 @@ public:
 
   ::std::string exportLogs() const noexcept {
     ::std::stringstream ss;
-    for (const internal::LogEntry& entry : logEntries_) {
+    for (const internal::LogEntry& entry : log_entries_) {
       ss << entry.timestamp << " ";
       if (entry.packet) {
           ss << "Packet: " << entry.packet->toString() << " ";
@@ -74,7 +75,7 @@ public:
   }
 
 private:
-  ::std::vector<internal::LogEntry> logEntries_;
+  ::std::vector<internal::LogEntry> log_entries_;
 };
 
 

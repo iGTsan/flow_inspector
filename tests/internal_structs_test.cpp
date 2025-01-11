@@ -65,7 +65,7 @@ TEST(SignatureTest, ConstructorWithNonEmptyPayload) {
 
 
 TEST(SignatureTest, ConstructorWithPayloadAndOffset) {
-  std::vector<byte> payload = {2, 3, 4};
+  ::std::vector<byte> payload = {2, 3, 4};
   uint32_t offset = 1;
   Signature signature(payload, offset);
   
@@ -81,13 +81,89 @@ TEST(SignatureTest, ConstructorWithPayloadAndOffset) {
 
 
 TEST(SignatureTest, CheckWithOffsetBeyondPacketSize) {
-  std::vector<byte> payload = {1, 2, 3};
+  ::std::vector<byte> payload = {1, 2, 3};
   uint32_t offset = 10;
   Signature signature(payload, offset);
   
   
   Packet packet{::std::vector<byte>{1, 2, 3, 4, 5}};
   EXPECT_FALSE(signature.check(packet));
+}
+
+
+TEST(RuleTest, ConstructorWithValidNameAndEventType) {
+  const ::std::string testName = "TestRule";
+  const Event::EventType testType = Event::EventType::TestEvent;
+  
+  Rule rule(testName, testType);
+  
+  EXPECT_EQ(rule.getName(), testName);
+  EXPECT_EQ(rule.getType(), testType);
+}
+
+
+TEST(RuleTest, AddSignatureWithValidPointer) {
+  Rule rule("TestRule", Event::EventType::Alert);
+  
+  std::vector<byte> payload = {1, 2, 3, 4, 5};
+  const auto signature = std::make_unique<Signature>(payload);
+  
+  rule.addSignature(signature.get());
+  
+  Packet matchingPacket({0, 1, 2, 3, 4, 5, 6});
+  EXPECT_TRUE(rule.check(matchingPacket));
+  
+  Packet nonMatchingPacket({0, 1, 2, 3, 6, 7});
+  EXPECT_FALSE(rule.check(nonMatchingPacket));
+}
+
+
+TEST(RuleTest, CheckReturnsFalseForEmptySignatures) {
+  Rule rule("TestRule", Event::EventType::Alert);
+  Packet packet(::std::vector<byte>{1, 2, 3, 4, 5});
+
+  EXPECT_FALSE(rule.check(packet));
+}
+
+
+TEST(RuleTest, CheckMultipleMatchingSignatures) {
+  Rule rule("TestRule", Event::EventType::Alert);
+
+  ::std::vector<byte> payload1 = {1, 2, 3};
+  ::std::vector<byte> payload2 = {4, 5, 6};
+  Signature sig1(payload1);
+  Signature sig2(payload2);
+
+  rule.addSignature(&sig1);
+  rule.addSignature(&sig2);
+
+  ::std::vector<byte> packetData = {0, 1, 2, 3, 4, 5, 6, 7};
+  Packet packet(packetData);
+
+  EXPECT_TRUE(rule.check(packet));
+}
+
+
+TEST(RuleTest, CheckWithMultipleSignaturesOneNotMatching) {
+  Rule rule("TestRule", Event::EventType::Alert);
+
+  ::std::vector<byte> payload1 = {1, 2, 3};
+  ::std::vector<byte> payload2 = {4, 5, 6};
+  ::std::vector<byte> payload3 = {7, 8, 9};
+
+  Signature sig1(::std::move(payload1));
+  Signature sig2(::std::move(payload2));
+  Signature sig3(::std::move(payload3));
+
+  rule.addSignature(&sig1);
+  rule.addSignature(&sig2);
+  rule.addSignature(&sig3);
+
+  Packet matchingPacket(::std::vector<byte>{0, 1, 2, 3, 4, 5, 6, 10, 11});
+  Packet nonMatchingPacket(::std::vector<byte>{0, 1, 2, 3, 4, 5, 6, 10, 11, 12});
+
+  EXPECT_FALSE(rule.check(matchingPacket));
+  EXPECT_FALSE(rule.check(nonMatchingPacket));
 }
 
 

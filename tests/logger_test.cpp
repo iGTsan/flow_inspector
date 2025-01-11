@@ -72,8 +72,7 @@ TEST(LoggerTest, ExportLogsToFile) {
 
 TEST(LoggerTest, HandleLargeNumberOfLogEntries) {
   Logger logger;
-  const int numEntries = 10;
-  // const int numEntries = 1000000;
+  const int numEntries = 10000;
 
   for (int i = 0; i < numEntries; ++i) {
     if (i % 2 == 0) {

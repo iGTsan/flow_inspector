@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 #include "logger.h"
 #include "events_handler.h"
 #include "internal_structs.h"
@@ -10,29 +12,159 @@ namespace flow_inspector {
 
 class Analyzer {
 public:
-  Analyzer(Logger& logger, EventsHandler& eventsHandler) noexcept
+  Analyzer(Logger& logger, EventsHandler& events_handler) noexcept
     : logger_{logger}
-    , eventsHandler_{eventsHandler}
+    , events_handler_{events_handler}
   {}
 
-  void detectThreats(const internal::Packet& /*packet*/) {
-    // Реализация обнаружения угроз
+  void detectThreats(const internal::Packet& packet) {
+    logger_.logMessage("detectThreats for " + packet.toString());
+    for (const auto&  rule : rules_) {
+      if (rule.check(packet)) {
+        events_handler_.addEvent(internal::Event{
+          .type = rule.getType(),
+          .rule = rule,
+          .packet = packet,
+        });
+        logger_.logMessage("Threat detected");
+      }
+    }
   }
 
-  void loadRule(const internal::Rule& rule) {
-    rules_.push_back(rule);
+  bool parseRule(const ::std::string& rule) {
+    return tryParseNative(rule);
   }
 
-  void loadSignature(const internal::Signature& signature) {
-    signatures_.push_back(signature);
+  size_t getSignaturesCount() const {
+    return signatures_.size();
   }
 
 private:
-  ::std::vector<internal::Rule> rules_;
-  ::std::vector<internal::Signature> signatures_;
+  // parses the rules that satisfy the following pattern
+  // event; name; signature1; signature2 ...
+  // where event is a member of ::flow_inspector::internal::Event::EventType
+  // signature1 is (payload, offset) or just (payload)
+  // payload is a vector bytes [1 2 3...], offset is a uint32_t
+  bool tryParseNative(const ::std::string& rule) {
+    ::std::istringstream stream(rule);
+    ::std::string event_str;
+
+    if (!::std::getline(stream, event_str, ';')) {
+      logger_.logMessage(
+          rule + " rule doesn't contains event");
+      return false;
+    }
+    ::std::string name;
+    if (!::std::getline(stream, name, ';')) {
+      logger_.logMessage(
+          rule + " rule doesn't contains name");
+      return false;
+    }
+    if (!internal::Event::isValidEventType(event_str)) {
+      logger_.logMessage(
+          rule + " rule contains invalid event");
+      return false;
+    }
+
+    internal::Rule result(name, internal::Event::stringToEventType(event_str));
+    ::std::string signature;
+    while (std::getline(stream, signature, ';')) {
+      size_t open_bracket = signature.find('(');
+      size_t close_bracket = signature.find(')', open_bracket);
+      if (open_bracket == ::std::string::npos || close_bracket == ::std::string::npos) {
+        logger_.logMessage(
+            rule + " \"" + signature + "\" signature contains wrong brackets");
+        return false;
+      }
+
+      ::std::string payload_str =
+          signature.substr(open_bracket + 1, close_bracket - open_bracket - 1);
+      ::std::istringstream payload_stream(payload_str);
+      ::std::string item;
+      ::std::vector<::std::string> components;
+
+      while (::std::getline(payload_stream, item, ',')) {
+        components.push_back(item);
+      }
+      if (components.size() != 1 && components.size() != 2) {
+        logger_.logMessage(
+            rule + " \"" + signature + "\" signature contains wrong number of components");
+        return false;
+      }
+      
+      ::std::vector<internal::byte> payload;
+      ::std::istringstream byte_stream(components[0]);
+      char bracket;
+      byte_stream >> bracket;
+      int byte_value;
+      while (byte_stream >> byte_value) {
+        if (byte_value < 0 || byte_value > 255) {
+          logger_.logMessage(
+              rule + " \"" + signature + "\" signature contains wrong byte");
+          return false;
+        }
+        logger_.logMessage(rule + " \"" + signature + "\" \"" +::std::to_string(byte_value) +
+            "\" payload contains byte");
+        payload.push_back(internal::byte(byte_value & 0xFF));
+      }
+
+      if (payload.size() == 0) {
+        logger_.logMessage(
+            rule + " \"" + signature + "\" signature contains no payload");
+        return false;
+      }
+
+      ::std::optional<uint32_t> offset;
+      if (components.size() == 2) {
+        offset = static_cast<uint32_t>(::std::stoi(components[1]));
+        logger_.logMessage(rule + " \"" + signature + "\" \"" + ::std::to_string(*offset) +
+            "\" payload contains offset");
+      }
+
+      const internal::Signature* sig;
+      if (offset) {
+        const auto& it = signatures_.insert(
+            ::std::make_unique<internal::Signature>(payload, *offset)).first;
+        sig = it->get();
+      } else {
+        const auto& it = signatures_.insert(
+            ::std::make_unique<internal::Signature>(payload)).first;
+        sig = it->get();
+      }
+      result.addSignature(sig);
+    }
+
+    loadRule(::std::move(result));
+    return true;
+  }
+
+  void loadRule(internal::Rule rule) {
+    rules_.insert(::std::move(rule));
+  }
+
+  ::std::unordered_set<internal::Rule> rules_;
+  ::std::unordered_set<
+      ::std::unique_ptr<internal::Signature>,
+      internal::UniquePtrSignatureHash,
+      internal::UniquePtrSignatureEqual> signatures_;
   Logger& logger_;
-  EventsHandler& eventsHandler_;
+  EventsHandler& events_handler_;
 };
+
+
+inline bool loadFile(Analyzer& analyzer, const std::string& filename) {
+  ::std::ifstream file(filename);
+  if (!file.is_open()) {
+    return false;
+  }
+  ::std::string line;
+  while (std::getline(file, line)) {
+    if (!analyzer.parseRule(line)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 
 }  // namespace flow_inspector

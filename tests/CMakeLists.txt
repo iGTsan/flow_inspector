@@ -8,15 +8,27 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 set(PCAP_FILES_DIR "${CMAKE_SOURCE_DIR}/tests/pcap_files")
-
 set(PCAP_FILES
     "double_packets.pcap"
     "empty.pcap"
     "single_packet.pcap"
 )
-
 foreach(file ${PCAP_FILES})
     configure_file(${PCAP_FILES_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
+endforeach()
+
+set(RULE_FILES_DIR "${CMAKE_SOURCE_DIR}/tests/rule_files")
+set(RULE_FILES
+    "1_sig.rule"
+    "1_sig_with_offset.rule"
+    "2_rules_same_sig.rule"
+    "2_rules.rule"
+    "2_sig.rule"
+    "bad.rule"
+    "empty.rule"
+)
+foreach(file ${RULE_FILES})
+    configure_file(${RULE_FILES_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
 endforeach()
 
 add_executable(runTests
@@ -25,6 +37,7 @@ add_executable(runTests
     pcap_reader_test.cpp
     logger_test.cpp
     events_handler_test.cpp
+    analyzer_test.cpp
 )
 
 target_link_libraries(runTests GTest::gtest GTest::gtest_main TrafficAnalyzerLibrary)

@@ -19,13 +19,17 @@
 namespace flow_inspector::internal {
 
 
+class Signature;
+class Rule;
+
+
 using byte = uint8_t;
 
 
 class ByteVector {
 public:
   ByteVector(::std::vector<byte> data) noexcept
-    : holder_{::std::make_shared<const std::vector<byte>>(::std::move(data))}
+    : holder_{::std::make_shared<const ::std::vector<byte>>(::std::move(data))}
     , data_{holder_->data(), holder_->size()}
   {}
 
@@ -52,14 +56,24 @@ public:
         ::std::equal(data_.begin(), data_.end(), other.data_.begin());
   }
 
+  bool operator!=(const ByteVector& other) const noexcept {
+    return !(*this == other);
+  }
+
+  void print() const noexcept {
+    for (auto it = data_.begin(); it!= data_.end(); ++it) {
+      std::cout << int(*it) << " ";
+    }
+    std::cout << "\n";
+  }
+
 private:
+  template <typename T>
+  friend struct ::std::hash;
+
   ::std::shared_ptr<const ::std::vector<byte>> holder_;
   ::std::span<const byte> data_;
-
 };
-
-
-class Signature;
 
 
 struct Packet {
@@ -73,6 +87,10 @@ struct Packet {
 
   bool operator==(const Packet& other) const noexcept {
     return bytes == other.bytes;
+  }
+
+  bool operator!=(const Packet& other) const noexcept {
+    return bytes != other.bytes;
   }
 
   ::std::string toString() const noexcept {
@@ -118,16 +136,24 @@ struct LogEntry {
 
 class Signature {
 public:
-  Signature(const ::std::vector<byte>& payload) noexcept
-    : payload_(payload)
-  {}
+  Signature(::std::vector<byte> payload) noexcept
+    : payload_(::std::move(payload))
+  {
+    payload_.print();
+  }
 
-  Signature(const ::std::vector<byte>& payload, const uint32_t payload_offset) noexcept
-    : payload_(payload)
+  Signature(::std::vector<byte> payload, const uint32_t payload_offset) noexcept
+    : payload_(::std::move(payload))
     , payload_offset_(payload_offset)
-  {}
+  {
+    payload_.print();
+  }
 
   bool check(const Packet& packet) const noexcept {
+    ::std::cout << "Checking signature ";
+    payload_.print();
+    ::std::cout << "Packet payload ";
+    packet.bytes.print();
     if (packet.signatures.contains(this)) {
       return true;
     }
@@ -135,39 +161,25 @@ public:
       return *payload_offset_ + payload_->size() <= packet.bytes->size() &&
         ::std::equal(payload_->begin(), payload_->end(), packet.bytes->begin() + *payload_offset_);
     }
-    return ::std::search(packet.bytes->begin(), packet.bytes->end(),
+    bool result = ::std::search(packet.bytes->begin(), packet.bytes->end(),
       payload_->begin(), payload_->end()) != packet.bytes->end();
+    std::cout << "Result is: " << result << std::endl;
+    return result;
+  }
+
+  bool operator==(const Signature& other) const noexcept {
+    if (payload_offset_ != other.payload_offset_) {
+      return false;
+    }
+    return payload_ == other.payload_;
   }
 
 private:
+  template <typename T>
+  friend struct ::std::hash;
+
   ByteVector payload_;
   ::std::optional<uint32_t> payload_offset_;
-};
-
-
-class Rule {
-public:
-  Rule(const ::std::string& name) noexcept
-    : name_{name}
-  {}
-
-  const ::std::string& getName() const noexcept {
-    return name_;
-  }
-
-  void addSignature(const Signature* signature) noexcept {
-    signatures_.insert(signature);
-  }
-
-  bool check(const Packet& packet) const noexcept {
-    return!signatures_.empty() &&
-      std::all_of(signatures_.begin(), signatures_.end(),
-        [&packet](const Signature* signature) { return signature->check(packet); });
-  }
-
-private:
-  ::std::string name_;
-  ::std::unordered_set<const Signature*> signatures_;
 };
 
 
@@ -176,11 +188,73 @@ struct Event {
     Alert,
     Notify,
     TestEvent,
+    TestEvent1,
+    TestEvent2,
+    InvalidEventType,
   };
+
+  static bool isValidEventType(const std::string& event) {
+    return event == "Alert" ||
+      event == "Notify" ||
+      event == "TestEvent" ||
+      event == "TestEvent1" ||
+      event == "TestEvent2";
+  }
+
+  static EventType stringToEventType(const std::string& event) {
+    if (event == "Alert") return EventType::Alert;
+    if (event == "Notify") return EventType::Notify;
+    if (event == "TestEvent") return EventType::TestEvent;
+    if (event == "TestEvent1") return EventType::TestEvent1;
+    if (event == "TestEvent2") return EventType::TestEvent2;
+    return EventType::InvalidEventType;
+  }
 
   const EventType type;
   const Rule& rule;
   const Packet& packet;
+};
+
+
+class Rule {
+public:
+  Rule(const ::std::string& name, const Event::EventType type) noexcept
+    : name_{name}
+    , type_{type}
+  {}
+
+  const ::std::string& getName() const noexcept {
+    return name_;
+  }
+
+  const Event::EventType& getType() const noexcept {
+    return type_;
+  }
+
+  void addSignature(const Signature* signature) noexcept {
+    signatures_.insert(signature);
+  }
+
+  bool check(const Packet& packet) const noexcept {
+    return!signatures_.empty() &&
+      ::std::all_of(signatures_.begin(), signatures_.end(),
+        [&packet](const Signature* signature) { return signature->check(packet); });
+  }
+
+  bool operator==(const Rule& other) const noexcept {
+    if (name_ != other.name_) {
+      return false;
+    }
+    return signatures_ == other.signatures_;
+  }
+
+private:
+  template <typename T>
+  friend struct ::std::hash;
+
+  const ::std::string name_;
+  ::std::unordered_set<const Signature*> signatures_;
+  const Event::EventType type_;
 };
 
 
@@ -189,6 +263,66 @@ public:
   virtual void parse(const Packet& packet) noexcept = 0;
 
   virtual const Packet* nextLayer() noexcept = 0;
+};
+
+
+}  // namespace flow_inspector::internal
+
+
+namespace std {
+
+
+template<>
+struct hash<::flow_inspector::internal::ByteVector> {
+  size_t operator()(const ::flow_inspector::internal::ByteVector& obj) const {
+    size_t hashsum = 0;
+    for (const auto& b : obj.data_) {
+      hashsum ^= (static_cast<int>(b)) + 0x9e3779b9 + (hashsum << 6) + (hashsum >> 2);
+    }
+    return hashsum;
+  }
+};
+
+
+template<>
+struct hash<::flow_inspector::internal::Signature> {
+    size_t operator()(const ::flow_inspector::internal::Signature& obj) const {
+      return hash<::flow_inspector::internal::ByteVector>{}(obj.payload_) ^
+          (hash<optional<uint32_t>>{}(obj.payload_offset_) << 1);
+    }
+};
+
+
+template<>
+struct hash<::flow_inspector::internal::Rule> {
+  size_t operator()(const ::flow_inspector::internal::Rule& obj) const {
+    size_t hashsum = hash<string>{}(obj.name_);
+    for (const auto& s : obj.signatures_) {
+      hashsum ^= hash<::flow_inspector::internal::Signature>{}(*s);
+    }
+    return hashsum;
+  }
+};
+
+
+}  // namespace std
+
+
+namespace flow_inspector::internal {
+
+
+struct UniquePtrSignatureHash {
+    ::std::size_t operator()(const ::std::unique_ptr<Signature>& sig) const {
+      return ::std::hash<Signature>()(*sig);
+    }
+};
+
+
+struct UniquePtrSignatureEqual {
+    bool operator()(
+        const ::std::unique_ptr<Signature>& lhs, const ::std::unique_ptr<Signature>& rhs) const {
+      return *lhs == *rhs;
+    }
 };
 
 

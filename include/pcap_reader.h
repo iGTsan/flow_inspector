@@ -23,8 +23,8 @@ public:
   }
 
   void startReading(const ::std::string& filename) noexcept {
-    inputFile_ = filename;
-    isReading_ = true;
+    input_file_ = filename;
+    is_reading_ = true;
     char errbuf[PCAP_ERRBUF_SIZE];
     
     pcap_t* handle = pcap_open_offline(filename.c_str(), errbuf);
@@ -50,13 +50,13 @@ public:
     
   }
   void stopReading() noexcept {
-    isReading_ = false;
+    is_reading_ = false;
   }
 
 private:
   PacketProcessor packet_processor_;
-  ::std::string inputFile_;
-  bool isReading_;
+  ::std::string input_file_;
+  bool is_reading_;
 };
 
 
