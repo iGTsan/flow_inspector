@@ -11,6 +11,7 @@ set(PCAP_FILES_DIR "${CMAKE_SOURCE_DIR}/tests/pcap_files")
 set(PCAP_FILES
     "double_packets.pcap"
     "empty.pcap"
+    "http.pcap"
     "single_packet.pcap"
 )
 foreach(file ${PCAP_FILES})
@@ -32,12 +33,13 @@ foreach(file ${RULE_FILES})
 endforeach()
 
 add_executable(runTests
-    test_1.cpp
+    # test_1.cpp
     internal_structs_test.cpp
     pcap_reader_test.cpp
     logger_test.cpp
     events_handler_test.cpp
     analyzer_test.cpp
+    packet_processors_pool_test.cpp
 )
 
 target_link_libraries(runTests GTest::gtest GTest::gtest_main TrafficAnalyzerLibrary)

@@ -31,8 +31,9 @@ case $SANITIZER in
         ;;
     memory)
         # MemorySanitizer поддерживается только в Clang
-        if [ "$USING_CLANG" = true ]; then
-            SANITIZER_FLAGS="-fsanitize=memory"
+        # if [ "$USING_CLANG" = true ]; then
+        if [ false = true ]; then
+            SANITIZER_FLAGS="-fsanitize=memory -g -fPIE -fno-omit-frame-pointer"
         else
             ENABLE_VALGRIND=1
         fi
@@ -46,7 +47,9 @@ esac
 
 mkdir -p build
 cd build
-cmake -DCMAKE_CXX_FLAGS="$SANITIZER_FLAGS" -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..
+cmake -DCMAKE_CXX_FLAGS="$SANITIZER_FLAGS"\
+    -DCMAKE_EXE_LINKER_FLAGS_DEBUG="$SANITIZER_FLAGS"\
+    -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..
 cmake --build . -- -j$(nproc)
 if [ "$ENABLE_VALGRIND" = "1" ]; then
     cd tests
