@@ -18,15 +18,15 @@ case $SANITIZER in
         SANITIZER_FLAGS=""
         ;;
     address)
-        SANITIZER_FLAGS="-fsanitize=address -g"
+        SANITIZER_FLAGS="-fsanitize=address -g -fPIE -fno-omit-frame-pointer"
         BUILD_TYPE="Debug"
         ;;
     undefined)
-        SANITIZER_FLAGS="-fsanitize=undefined -g"
+        SANITIZER_FLAGS="-fsanitize=undefined -g -fPIE -fno-omit-frame-pointer"
         BUILD_TYPE="Debug"
         ;;
     thread)
-        SANITIZER_FLAGS="-fsanitize=thread -g"
+        SANITIZER_FLAGS="-fsanitize=thread -g -fPIE -fno-omit-frame-pointer"
         BUILD_TYPE="Debug"
         ;;
     memory)

@@ -18,7 +18,7 @@ public:
   {}
 
   void detectThreats(const internal::Packet& packet) {
-    logger_.logMessage("detectThreats for " + packet.toString());
+    logger_.logDebug("detectThreats for " + packet.toString());
     for (const auto&  rule : rules_) {
       if (rule.check(packet)) {
         events_handler_.addEvent(internal::Event{
@@ -26,7 +26,7 @@ public:
           .rule = rule,
           .packet = packet,
         });
-        logger_.logMessage("Threat detected");
+        logger_.logDebug("Threat detected");
       }
     }
   }
@@ -50,18 +50,18 @@ private:
     ::std::string event_str;
 
     if (!::std::getline(stream, event_str, ';')) {
-      logger_.logMessage(
+      logger_.logDebug(
           rule + " rule doesn't contains event");
       return false;
     }
     ::std::string name;
     if (!::std::getline(stream, name, ';')) {
-      logger_.logMessage(
+      logger_.logDebug(
           rule + " rule doesn't contains name");
       return false;
     }
     if (!internal::Event::isValidEventType(event_str)) {
-      logger_.logMessage(
+      logger_.logDebug(
           rule + " rule contains invalid event");
       return false;
     }
@@ -72,7 +72,7 @@ private:
       size_t open_bracket = signature.find('(');
       size_t close_bracket = signature.find(')', open_bracket);
       if (open_bracket == ::std::string::npos || close_bracket == ::std::string::npos) {
-        logger_.logMessage(
+        logger_.logDebug(
             rule + " \"" + signature + "\" signature contains wrong brackets");
         return false;
       }
@@ -87,7 +87,7 @@ private:
         components.push_back(item);
       }
       if (components.size() != 1 && components.size() != 2) {
-        logger_.logMessage(
+        logger_.logDebug(
             rule + " \"" + signature + "\" signature contains wrong number of components");
         return false;
       }
@@ -99,17 +99,17 @@ private:
       int byte_value;
       while (byte_stream >> byte_value) {
         if (byte_value < 0 || byte_value > 255) {
-          logger_.logMessage(
+          logger_.logDebug(
               rule + " \"" + signature + "\" signature contains wrong byte");
           return false;
         }
-        logger_.logMessage(rule + " \"" + signature + "\" \"" +::std::to_string(byte_value) +
+        logger_.logDebug(rule + " \"" + signature + "\" \"" +::std::to_string(byte_value) +
             "\" payload contains byte");
         payload.push_back(internal::byte(byte_value & 0xFF));
       }
 
       if (payload.size() == 0) {
-        logger_.logMessage(
+        logger_.logDebug(
             rule + " \"" + signature + "\" signature contains no payload");
         return false;
       }
@@ -117,7 +117,7 @@ private:
       ::std::optional<uint32_t> offset;
       if (components.size() == 2) {
         offset = static_cast<uint32_t>(::std::stoi(components[1]));
-        logger_.logMessage(rule + " \"" + signature + "\" \"" + ::std::to_string(*offset) +
+        logger_.logDebug(rule + " \"" + signature + "\" \"" + ::std::to_string(*offset) +
             "\" payload contains offset");
       }
 
@@ -155,6 +155,7 @@ private:
 inline bool loadFile(Analyzer& analyzer, const std::string& filename) {
   ::std::ifstream file(filename);
   if (!file.is_open()) {
+    ::std::cerr << "Can't open file " << filename << std::endl;
     return false;
   }
   ::std::string line;

@@ -44,7 +44,7 @@ TEST(PacketProcessorsPoolTest, AddPacketToQueue) {
 }
 
 
-TEST(PacketProcessorsPoolTest, ProcessLargeNumberPacket) {
+TEST(PacketProcessorsPoolTest, ProcessLargeNumberOfPacketSingleThread) {
   Logger logger;
   EventsHandler handler{logger};
   Analyzer analyzer{logger, handler};
@@ -62,10 +62,37 @@ TEST(PacketProcessorsPoolTest, ProcessLargeNumberPacket) {
     reader.setProcessor([&](const internal::Packet& packet) {
       pool.addPacket(packet);
     });
-    reader.startReading("http.pcap");
+    reader.setFilename("http.pcap");
+    reader.startReading();
   }
 
   EXPECT_EQ(cnt, 220);
+}
+
+
+TEST(PacketProcessorsPoolTest, ProcessLargeNumberOfPacketMultiThread) {
+  Logger logger;
+  EventsHandler handler{logger};
+  Analyzer analyzer{logger, handler};
+
+  ::std::atomic<size_t> cnt{0};
+
+  {
+    PacketProcessorsPool pool{analyzer, 4};
+    auto callback = [&](auto& packet) {
+      cnt.fetch_add(1);
+    };
+    pool.addCallback(callback);
+
+    PcapReader reader;
+    reader.setProcessor([&](const internal::Packet& packet) {
+      pool.addPacket(packet);
+    });
+    reader.setFilename("http.pcap");
+    reader.startReading();
+  }
+
+  EXPECT_EQ(cnt.load(), 220);
 }
 
 

@@ -26,6 +26,7 @@ set(RULE_FILES
     "2_rules.rule"
     "2_sig.rule"
     "bad.rule"
+    "double_packets_one_hit.rule"
     "empty.rule"
 )
 foreach(file ${RULE_FILES})
@@ -40,6 +41,7 @@ add_executable(runTests
     events_handler_test.cpp
     analyzer_test.cpp
     packet_processors_pool_test.cpp
+    ids_test.cpp
 )
 
 target_link_libraries(runTests GTest::gtest GTest::gtest_main TrafficAnalyzerLibrary)

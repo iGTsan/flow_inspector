@@ -17,7 +17,8 @@ TEST(PcapReaderTest, ShouldSuccessfullySetPacketProcessor) {
   reader.setProcessor(testProcessor);
 
   std::string testPcapFile = "single_packet.pcap";
-  reader.startReading(testPcapFile);
+  reader.setFilename(testPcapFile);
+  reader.startReading();
 
   EXPECT_TRUE(processorCalled);
 }
@@ -35,7 +36,8 @@ TEST(PcapReaderTest, ReadEmptyPcap) {
   reader.setProcessor(testProcessor);
 
   std::string testPcapFile = "empty.pcap";
-  reader.startReading(testPcapFile);
+  reader.setFilename(testPcapFile);
+  reader.startReading();
 
   EXPECT_FALSE(processorCalled);
 }
@@ -53,7 +55,8 @@ TEST(PcapReaderTest, ReadSinglePacket) {
   reader.setProcessor(testProcessor);
 
   ::std::string testPcapFile = "single_packet.pcap";
-  reader.startReading(testPcapFile);
+  reader.setFilename(testPcapFile);
+  reader.startReading();
 
   EXPECT_FALSE(capturedPackets.empty());
 
@@ -75,7 +78,8 @@ TEST(PcapReaderTest, ReadDoublePackets) {
   reader.setProcessor(testProcessor);
 
   ::std::string testPcapFile = "double_packets.pcap";
-  reader.startReading(testPcapFile);
+  reader.setFilename(testPcapFile);
+  reader.startReading();
 
   EXPECT_EQ(capturedPackets.size(), 2);
 

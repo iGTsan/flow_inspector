@@ -13,7 +13,18 @@
 #include <optional>
 #include <cstdint>
 #include <span>
+#include <cstdlib>
 #include <unordered_set>
+
+
+#define VERIFY(expression, message) \
+  do { \
+    if (!(expression)) { \
+      ::std::cerr << "Assertion failed: (" << #expression << "), function " << __FUNCTION__ \
+          << ", file " << __FILE__ << ", line " << __LINE__ << ".\n" << message << std::endl; \
+      ::std::abort(); \
+    } \
+  } while (false)
 
 
 namespace flow_inspector::internal {

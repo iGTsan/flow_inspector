@@ -15,30 +15,54 @@ namespace flow_inspector {
 
 class Logger {
 public:
+  enum class LogLevel {
+    DEBUG,
+    INFO,
+    WARNING,
+    ERROR,
+  };
+
+  void setLevel(LogLevel level) {
+    log_level_ = level;
+  }
+
   void logEvent(const internal::LogEntry& entry) noexcept {
+    ::std::lock_guard<std::mutex> lock{log_entries_mutex_};
     log_entries_.push_back(entry);
   }
 
   void logPacket(internal::Packet packet) noexcept {
-    logEvent(internal::LogEntry{
-      .timestamp = getTime(),
-      .packet = ::std::move(packet),
-    });
+    if (log_level_ <= LogLevel::INFO) {
+      logEvent(internal::LogEntry{
+        .timestamp = getTime(),
+        .packet = ::std::move(packet),
+      });
+    }
   }
 
   void logAlert(internal::Alert alert) noexcept {
-    logEvent(internal::LogEntry{
-      .timestamp = getTime(),
-      .alert = ::std::move(alert),
-    });
+    if (log_level_ <= LogLevel::WARNING) {
+      logEvent(internal::LogEntry{
+        .timestamp = getTime(),
+        .alert = ::std::move(alert),
+      });
+    }
+  }
+
+  void logDebug(::std::string message) noexcept {
+    if (log_level_ <= LogLevel::DEBUG) {
+      logMessage("DEBUG: " + ::std::move(message));
+    }
   }
 
   void logMessage(::std::string message) noexcept {
-    ::std::cout << message << ::std::endl;
-    logEvent(internal::LogEntry{
-      .timestamp = getTime(),
-      .message = ::std::move(message),
-    });
+    if (log_level_ <= LogLevel::INFO) {
+      ::std::cout << message << ::std::endl;
+      logEvent(internal::LogEntry{
+        .timestamp = getTime(),
+        .message = ::std::move(message),
+      });
+    }
   }
 
   ::std::string exportLogs() const noexcept {
@@ -57,6 +81,7 @@ public:
       ss << "\n";
     }
     std::cout << ss.str() << "\n";
+    std::cout << log_entries_.size() << "\n";
     return ss.str();
   }
 
@@ -75,7 +100,9 @@ public:
   }
 
 private:
+  ::std::mutex log_entries_mutex_;
   ::std::vector<internal::LogEntry> log_entries_;
+  LogLevel log_level_ = LogLevel::INFO;
 };
 
 
