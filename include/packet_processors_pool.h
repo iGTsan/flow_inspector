@@ -21,9 +21,9 @@ public:
       analyzer_.detectThreats(packet);
     });
     for (uint8_t i = 0; i < num_packet_processors; ++i) {
-      std::cout << "thread initialization started" << std::endl;
+      internal::coutDebug() << "thread initialization started" << std::endl;
       processors_.emplace_back(&PacketProcessorsPool::processPacket, this);
-      std::cout << "thread initialized" << std::endl;
+      internal::coutDebug() << "thread initialized" << std::endl;
     }
   }
 
@@ -32,7 +32,7 @@ public:
   }
 
   void addPacket(internal::Packet packet) noexcept {
-    std::cout << "packet added" << std::endl;
+    internal::coutDebug() << "packet added" << std::endl;
     packets_.enqueue(::std::move(packet));
   }
 
@@ -54,9 +54,9 @@ public:
     if (done_.load()) {
       return;
     }
-    std::cout << "finish called" << std::endl;
+    internal::coutDebug() << "finish called" << std::endl;
     done_.store(true);
-    std::cout << "done stored" << std::endl;
+    internal::coutDebug() << "done stored" << std::endl;
     for (auto& thread : processors_) {
       thread.join();
     }
@@ -66,14 +66,14 @@ private:
   static constexpr ::std::chrono::milliseconds kSleepTime{10};
 
   void processPacket() noexcept {
-    std::cout << "thread started" << std::endl;
+    internal::coutDebug() << "thread started" << std::endl;
     internal::Packet packet{{}};
     while (getPacket(packet)) {
       for (const auto& callback : callbacks_) {
         callback(packet);
       }
     }
-    std::cout << "thread ended" << std::endl;
+    internal::coutDebug() << "thread ended" << std::endl;
   }
 
   ::moodycamel::ConcurrentQueue<internal::Packet> packets_;

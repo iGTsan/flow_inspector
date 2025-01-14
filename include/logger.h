@@ -8,6 +8,7 @@
 #include <memory>
 #include <chrono>
 #include "internal_structs.h"
+#include "debug_logger.h"
 
 
 namespace flow_inspector {
@@ -57,7 +58,7 @@ public:
 
   void logMessage(::std::string message) noexcept {
     if (log_level_ <= LogLevel::INFO) {
-      ::std::cout << message << ::std::endl;
+      internal::coutDebug() << message << ::std::endl;
       logEvent(internal::LogEntry{
         .timestamp = getTime(),
         .message = ::std::move(message),
@@ -80,8 +81,6 @@ public:
       }
       ss << "\n";
     }
-    std::cout << ss.str() << "\n";
-    std::cout << log_entries_.size() << "\n";
     return ss.str();
   }
 

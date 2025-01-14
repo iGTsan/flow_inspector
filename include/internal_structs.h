@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <unordered_set>
 
+#include "debug_logger.h"
 
 #define VERIFY(expression, message) \
   do { \
@@ -73,9 +74,9 @@ public:
 
   void print() const noexcept {
     for (auto it = data_.begin(); it!= data_.end(); ++it) {
-      std::cout << int(*it) << " ";
+      coutDebug() << int(*it) << " ";
     }
-    std::cout << "\n";
+    coutDebug() << "\n";
   }
 
 private:
@@ -161,9 +162,9 @@ public:
   }
 
   bool check(const Packet& packet) const noexcept {
-    ::std::cout << "Checking signature ";
+    coutDebug() << "Checking signature ";
     payload_.print();
-    ::std::cout << "Packet payload ";
+    coutDebug() << "Packet payload ";
     packet.bytes.print();
     if (packet.signatures.contains(this)) {
       return true;
@@ -174,7 +175,7 @@ public:
     }
     bool result = ::std::search(packet.bytes->begin(), packet.bytes->end(),
       payload_->begin(), payload_->end()) != packet.bytes->end();
-    std::cout << "Result is: " << result << std::endl;
+    coutDebug() << "Result is: " << result << std::endl;
     return result;
   }
 

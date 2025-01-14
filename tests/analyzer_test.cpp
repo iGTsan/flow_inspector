@@ -36,7 +36,6 @@ TEST(AnalyzerTest, LoadSingleSignature) {
   size_t match_count = 0;
 
   EventsHandler::EventCallback callback = [&](const internal::Event& event) {
-    std::cout << event.packet.toString() << ' ' << matched_packet.toString() << std::endl;
     EXPECT_TRUE(event.packet == matched_packet);
     match_count++;
   };
