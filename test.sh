@@ -52,9 +52,9 @@ esac
 
 mkdir -p build
 cd build
-cmake -DCMAKE_CXX_FLAGS="$SANITIZER_FLAGS" \
+cmake .. -DCMAKE_CXX_FLAGS="$SANITIZER_FLAGS" \
     -DCMAKE_EXE_LINKER_FLAGS_DEBUG="$SANITIZER_FLAGS" \
-    -DCMAKE_BUILD_TYPE="$BUILD_TYPE" .. \
+    -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
     -DCMAKE_CXX_COMPILER="$COMPILER"
 cmake --build . -- -j$(nproc)
 if [ "$ENABLE_VALGRIND" = "1" ]; then
