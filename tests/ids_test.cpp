@@ -61,7 +61,7 @@ TEST(IDSTest, ProcessLargeNumberOfPackets) {
 
   for (int i = 0; i < 220; i++) {
     EXPECT_TRUE(::std::getline(log_file, log_str));
-    EXPECT_TRUE(log_str.find("Message: DEBUG: detectThreats for [") != ::std::string::npos);
+    EXPECT_TRUE(log_str.find("Message: detectThreats for [") != ::std::string::npos);
   }
   EXPECT_TRUE(::std::getline(log_file, log_str));
   EXPECT_TRUE(log_str.find("Message: IDS stopped.") != ::std::string::npos);
