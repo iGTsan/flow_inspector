@@ -33,13 +33,8 @@ public:
 
     const u_char* packet;
     struct pcap_pkthdr header;
-    while ((packet = pcap_next(handle, &header)) != nullptr) {
-        ::std::vector<internal::byte> payload{
-            reinterpret_cast<const internal::byte*>(packet), 
-            reinterpret_cast<const internal::byte*>(packet) + header.caplen};
-        packet_processor_(internal::Packet{
-          payload,
-        });
+    while ((packet = pcap_next(handle, &header)) != nullptr && !isDoneReading()) {
+      processPacket(&header, packet);
     }
 
     pcap_close(handle);

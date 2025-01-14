@@ -52,7 +52,7 @@ public:
 
   void logDebug(::std::string message) noexcept {
     if (log_level_ <= LogLevel::DEBUG) {
-      logMessage("DEBUG: " + ::std::move(message));
+      logMessage(::std::move(message));
     }
   }
 

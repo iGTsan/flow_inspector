@@ -7,11 +7,7 @@ SANITIZER_FLAGS=""
 BUILD_TYPE="Release"
 ENABLE_VALGRIND=0
 
-COMPILER=$(g++ --version | head -n 1)
-USING_CLANG=false
-if [[ $COMPILER == *"clang"* ]]; then
-    USING_CLANG=true
-fi
+COMPILER=clang++
 
 case $SANITIZER in
     "")
@@ -39,17 +35,27 @@ case $SANITIZER in
         fi
         BUILD_TYPE="Debug"
         ;;
+    coverage)
+        SANITIZER_FLAGS="--coverage"
+        BUILD_TYPE="Debug"
+        COMPILER=g++
+        # to run it:
+        # lcov --capture --directory . --output-file coverage.info --ignore-errors inconsistent
+        # genhtml coverage.info --output-directory out --ignore-errors inconsistent
+        ;;
     *)
-        echo "Invalid sanitizer option. Available sanitizers: none, address, undefined, thread, memory"
+        echo "Invalid sanitizer option. Available sanitizers: none,\
+            address, undefined, thread, memory, coverage"
         exit 1
         ;;
 esac
 
 mkdir -p build
 cd build
-cmake -DCMAKE_CXX_FLAGS="$SANITIZER_FLAGS"\
-    -DCMAKE_EXE_LINKER_FLAGS_DEBUG="$SANITIZER_FLAGS"\
-    -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..
+cmake -DCMAKE_CXX_FLAGS="$SANITIZER_FLAGS" \
+    -DCMAKE_EXE_LINKER_FLAGS_DEBUG="$SANITIZER_FLAGS" \
+    -DCMAKE_BUILD_TYPE="$BUILD_TYPE" .. \
+    -DCMAKE_CXX_COMPILER="$COMPILER"
 cmake --build . -- -j$(nproc)
 if [ "$ENABLE_VALGRIND" = "1" ]; then
     cd tests

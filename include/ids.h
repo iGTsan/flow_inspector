@@ -23,6 +23,10 @@ public:
   void start() noexcept {
     origin_->startReading();
   }
+
+  void stop() noexcept {
+    origin_->stopReading();
+  }
   
   void loadRules(const ::std::string& filename) noexcept {
     VERIFY(loadFile(analyzer_, filename), "Failed to load rules from file");
