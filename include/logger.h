@@ -6,6 +6,7 @@
 #include <sstream>
 #include <ctime>
 #include <memory>
+#include <thread>
 #include <chrono>
 #include "internal_structs.h"
 #include "debug_logger.h"
@@ -66,9 +67,14 @@ public:
     }
   }
 
-  ::std::string exportLogs() const noexcept {
+  ::std::string exportLogs() noexcept {
     ::std::stringstream ss;
-    for (const internal::LogEntry& entry : log_entries_) {
+    ::std::vector<internal::LogEntry> log_entries;
+    {
+      ::std::lock_guard<std::mutex> lock{log_entries_mutex_};
+      log_entries = ::std::move(log_entries_);
+    }
+    for (const internal::LogEntry& entry : log_entries) {
       ss << entry.timestamp << " ";
       if (entry.packet) {
           ss << "Packet: " << entry.packet->toString() << " ";
@@ -84,13 +90,18 @@ public:
     return ss.str();
   }
 
-  void exportLogs(const ::std::string& filename) const noexcept {
-    ::std::ofstream file(filename);
+  void exportLogsToFile() noexcept {
+    ::std::lock_guard<std::mutex> lock{file_mutex_};
+    if (!file_openned_) {
+      ::std::ofstream file(output_filename_);
+      file_openned_ = true;
+    }
+    ::std::ofstream file(output_filename_, ::std::ios::app);
     if (file.is_open()) {
       file << exportLogs();
       file.close();
     } else {
-      std::cerr << "Error opening file: " << filename << "\n";
+      ::std::cerr << "Error opening file: " << output_filename_ << "\n";
     }
   }
 
@@ -98,10 +109,44 @@ public:
     return ::std::time(nullptr);
   }
 
+  void setOutputFilename(const ::std::string& filename) noexcept {
+    ::std::lock_guard<std::mutex> lock{file_mutex_};
+    output_filename_ = filename;
+    file_openned_ = false;
+  }
+
+  ~Logger() noexcept {
+    ::std::cout << "done" << std::endl;
+    done_.store(true);
+    log_rotator_thread_.join();
+  }
+
+  static constexpr int MAX_LOG_ENTRIES = 2000;
+
 private:
+  void logRotator() {
+    size_t size;
+    while (!done_.load()) {
+      {
+        ::std::lock_guard<std::mutex> lock{log_entries_mutex_};
+        size = log_entries_.size();
+      }
+      if (size > MAX_LOG_ENTRIES) {
+        exportLogsToFile();
+      }
+      ::std::this_thread::sleep_for(::std::chrono::seconds(1));
+    }
+    exportLogsToFile();
+  }
+
   ::std::mutex log_entries_mutex_;
   ::std::vector<internal::LogEntry> log_entries_;
   LogLevel log_level_ = LogLevel::INFO;
+  ::std::mutex file_mutex_;
+  ::std::string output_filename_{"default.log"};
+  bool file_openned_;
+  ::std::atomic<bool> done_;
+  ::std::thread log_rotator_thread_{&Logger::logRotator, this};
 };
 
 

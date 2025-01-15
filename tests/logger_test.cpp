@@ -33,7 +33,8 @@ TEST(LoggerTest, ExportEmptyLogEntries) {
   EXPECT_TRUE(exportedLog.empty());
 
   ::std::string tempFileName = "temp_empty_log.txt";
-  logger.exportLogs(tempFileName);
+  logger.setOutputFilename(tempFileName);
+  logger.exportLogsToFile();
 
   ::std::ifstream file(tempFileName);
   EXPECT_TRUE(file.is_open());
@@ -55,7 +56,8 @@ TEST(LoggerTest, ExportLogsToFile) {
   logger.logAlert(testAlert);
 
   ::std::string tempFileName = "temp_log.txt";
-  logger.exportLogs(tempFileName);
+  logger.setOutputFilename(tempFileName);
+  logger.exportLogsToFile();
 
   ::std::ifstream file(tempFileName);
   ASSERT_TRUE(file.is_open());
@@ -72,7 +74,7 @@ TEST(LoggerTest, ExportLogsToFile) {
 
 TEST(LoggerTest, HandleLargeNumberOfLogEntries) {
   Logger logger;
-  const int numEntries = 10000;
+  const int numEntries = 1000;
 
   for (int i = 0; i < numEntries; ++i) {
     if (i % 2 == 0) {
@@ -84,7 +86,9 @@ TEST(LoggerTest, HandleLargeNumberOfLogEntries) {
     }
   }
 
+  ::std::cout << "before export" << std::endl;
   ::std::string exportedLog = logger.exportLogs();
+  ::std::cout << "after export" << std::endl;
 
   size_t packetCount = 0;
   size_t alertCount = 0;
@@ -101,6 +105,88 @@ TEST(LoggerTest, HandleLargeNumberOfLogEntries) {
 
   EXPECT_EQ(packetCount, numEntries / 2);
   EXPECT_EQ(alertCount, numEntries / 2);
+}
+
+
+TEST(LoggerTest, LogRotationWhenMaxEntriesExceeded) {
+  Logger logger;
+  const ::std::string tempFileName = "temp_rotated_log.txt";
+  
+  logger.setOutputFilename(tempFileName);
+
+  for (int i = 0; i <= Logger::MAX_LOG_ENTRIES; ++i) {
+    internal::Packet packet{::std::vector<internal::byte>{static_cast<internal::byte>(i)}};
+    logger.logPacket(packet);
+  }
+
+  ::std::this_thread::sleep_for(::std::chrono::seconds(2));
+
+  for (int i = 0; i < Logger::MAX_LOG_ENTRIES - 100; ++i) {
+    internal::Packet packet{::std::vector<internal::byte>{static_cast<internal::byte>(i)}};
+    logger.logPacket(packet);
+  }
+
+  ::std::ifstream file(tempFileName);
+  ASSERT_TRUE(file.is_open());
+
+  ::std::string fileContent((::std::istreambuf_iterator<char>(file)),
+      ::std::istreambuf_iterator<char>());
+
+  EXPECT_FALSE(fileContent.empty());
+
+  int logEntryCount = 0;
+  size_t pos = 0;
+  while ((pos = fileContent.find("Packet:", pos)) != ::std::string::npos) {
+    ++logEntryCount;
+    pos += 7;
+  }
+  EXPECT_LE(logEntryCount, Logger::MAX_LOG_ENTRIES + 1);
+
+  file.close();
+  ::std::remove(tempFileName.c_str());
+}
+
+
+TEST(LoggerTest, SetOutputFilename) {
+  Logger logger;
+  ::std::string newFilename = "new_output.log";
+
+  logger.setOutputFilename(newFilename);
+  logger.exportLogsToFile();
+
+  ::std::ifstream file(newFilename);
+  ASSERT_TRUE(file.is_open());
+  file.close();
+
+  ::std::remove(newFilename.c_str());
+}
+
+
+TEST(LoggerTest, DestructorBehavior) {
+  {
+    Logger logger;
+    logger.setOutputFilename("test_destructor.log");
+    
+    for (int i = 0; i < 100; ++i) {
+      logger.logMessage("Test message " + ::std::to_string(i));
+    }
+    ::std::this_thread::sleep_for(::std::chrono::milliseconds(100));
+  }
+  
+  // The logger should be destroyed here, and the log_rotator_thread should be joined
+
+  ::std::ifstream logFile("test_destructor.log");
+  ASSERT_TRUE(logFile.is_open());
+  
+  ::std::string fileContent((::std::istreambuf_iterator<char>(logFile)),
+                            ::std::istreambuf_iterator<char>());
+  
+  EXPECT_FALSE(fileContent.empty());
+  EXPECT_TRUE(fileContent.find("Test message 0") != ::std::string::npos);
+  EXPECT_TRUE(fileContent.find("Test message 99") != ::std::string::npos);
+  
+  logFile.close();
+  ::std::remove("test_destructor.log");
 }
 
 

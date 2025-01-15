@@ -37,13 +37,12 @@ public:
   }
 
   void setOutputFilename(const ::std::string& filename) noexcept {
-    output_filename_ = filename;
+    logger_.setOutputFilename(filename);
   }
   
   ~IDS() noexcept {
     pool_.finish();
     logger_.logMessage("IDS stopped.");
-    logger_.exportLogs(output_filename_);
   }
 
 private:
@@ -53,7 +52,6 @@ private:
   PacketProcessorsPool pool_;
   ::std::unique_ptr<PacketOrigin> origin_;
 
-  ::std::string output_filename_{"default.log"};
 };
 
 
