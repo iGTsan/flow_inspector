@@ -106,16 +106,17 @@ struct Packet {
   }
 
   ::std::string toString() const noexcept {
-    ::std::stringstream ss;
-    ss << "[";
-    for (auto it = bytes->begin(); it != bytes->end(); ++it) {
-      if (it != bytes->begin()) {
-        ss << " ";
-      }
-      ss << int(*it);
-    }
-    ss << "]";
-    return ss.str();
+    // ::std::stringstream ss;
+    // ss << "[";
+    // for (auto it = bytes->begin(); it != bytes->end(); ++it) {
+    //   if (it != bytes->begin()) {
+    //     ss << " ";
+    //   }
+    //   ss << int(*it);
+    // }
+    // ss << "]";
+    // return ss.str();
+    return "";
   }
 
   ByteVector bytes;

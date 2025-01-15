@@ -40,6 +40,8 @@ public:
     pcap_close(handle);
   }
 
+  void internalStopReading() noexcept override {}
+
 private:
   ::std::string input_file_;
 };

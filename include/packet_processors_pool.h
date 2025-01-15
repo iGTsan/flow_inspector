@@ -32,7 +32,7 @@ public:
   }
 
   void addPacket(internal::Packet packet) noexcept {
-    internal::coutDebug() << "packet added" << std::endl;
+    // internal::coutDebug() << "packet added" << std::endl;
     packets_.enqueue(::std::move(packet));
   }
 

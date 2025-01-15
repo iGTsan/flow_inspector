@@ -11,7 +11,7 @@ void signal_handler(int signal) {
         global_cli->stop();
     }
     ::flow_inspector::internal::coutDebug() << "stop signal: " << signal << ::std::endl;
-    ::std::exit(0);
+    // ::std::exit(0);
 }
 
 int main(int argc, char **argv) {

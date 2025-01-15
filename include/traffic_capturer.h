@@ -25,7 +25,7 @@ public:
     interface_name_ = interface_name;
   }
 
-  void startReading() noexcept {
+  void startReading() noexcept override {
     char error_buffer[PCAP_ERRBUF_SIZE];
     bpf_u_int32 subnet_mask, ip;
 
@@ -45,6 +45,12 @@ public:
 
     while (!isDoneReading()) {
       pcap_loop(handle_, 0, packetHandler, reinterpret_cast<u_char*>(this));
+    }
+  }
+
+  void internalStopReading() noexcept override {
+    if (handle_) {
+      pcap_breakloop(handle_);
     }
   }
 

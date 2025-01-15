@@ -34,6 +34,7 @@ public:
   void stopReading() noexcept {
     internal::coutDebug() << "Stopping reading" << std::endl;
     done_.store(true);
+    internalStopReading();
   }
 
   bool isDoneReading() const noexcept {
@@ -41,6 +42,9 @@ public:
   }
 
   virtual ~PacketOrigin() = default;
+
+protected:
+  virtual void internalStopReading() noexcept = 0;
 
 private:
   PacketProcessor packet_processor_;
