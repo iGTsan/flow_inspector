@@ -42,6 +42,7 @@ add_executable(runTests
     analyzer_test.cpp
     packet_processors_pool_test.cpp
     ids_test.cpp
+    pcap_writer_test.cpp
 )
 
 target_link_libraries(runTests GTest::gtest GTest::gtest_main TrafficAnalyzerLibrary)

@@ -2,6 +2,7 @@
 
 #include "analyzer.h"
 #include "events_handler.h"
+#include "pcap_writer.h"
 #include "logger.h"
 #include "packet_processors_pool.h"
 #include "packet_origin.h"
@@ -18,6 +19,10 @@ public:
     origin_->setProcessor([this](auto packet) {
       pool_.addPacket(::std::move(packet));
     });
+    events_handler_.addEventCallback(internal::Event::EventType::SaveToPcap,
+        [this](const internal::Event& event) {
+          pcap_writer_.savePacket(event.packet);
+        });
   }
 
   void start() noexcept {
@@ -39,6 +44,10 @@ public:
   void setOutputFilename(const ::std::string& filename) noexcept {
     logger_.setOutputFilename(filename);
   }
+
+  void setPcapOutputFilename(const ::std::string& filename) noexcept {
+    pcap_writer_.setOutputFilename(filename);
+  }
   
   ~IDS() noexcept {
     pool_.finish();
@@ -47,8 +56,9 @@ public:
 
 private:
   Logger logger_;
-  EventsHandler eventsHandler_{logger_};
-  Analyzer analyzer_{logger_, eventsHandler_};
+  EventsHandler events_handler_{logger_};
+  Analyzer analyzer_{logger_, events_handler_};
+  PcapWriter pcap_writer_;
   PacketProcessorsPool pool_;
   ::std::unique_ptr<PacketOrigin> origin_;
 

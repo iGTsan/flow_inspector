@@ -50,19 +50,19 @@ private:
     ::std::string event_str;
 
     if (!::std::getline(stream, event_str, ';')) {
-      logger_.logDebug(
-          rule + " rule doesn't contains event");
+      internal::coutDebug() <<
+          rule + " rule doesn't contains event";
       return false;
     }
     ::std::string name;
     if (!::std::getline(stream, name, ';')) {
-      logger_.logDebug(
-          rule + " rule doesn't contains name");
+      internal::coutDebug() <<
+          rule + " rule doesn't contains name";
       return false;
     }
     if (!internal::Event::isValidEventType(event_str)) {
-      logger_.logDebug(
-          rule + " rule contains invalid event");
+      internal::coutDebug() <<
+          rule + " rule contains invalid event";
       return false;
     }
 
@@ -72,8 +72,8 @@ private:
       size_t open_bracket = signature.find('(');
       size_t close_bracket = signature.find(')', open_bracket);
       if (open_bracket == ::std::string::npos || close_bracket == ::std::string::npos) {
-        logger_.logDebug(
-            rule + " \"" + signature + "\" signature contains wrong brackets");
+        internal::coutDebug() <<
+            rule + " \"" + signature + "\" signature contains wrong brackets";
         return false;
       }
 
@@ -87,8 +87,8 @@ private:
         components.push_back(item);
       }
       if (components.size() != 1 && components.size() != 2) {
-        logger_.logDebug(
-            rule + " \"" + signature + "\" signature contains wrong number of components");
+        internal::coutDebug() <<
+            rule + " \"" + signature + "\" signature contains wrong number of components";
         return false;
       }
       
@@ -99,26 +99,26 @@ private:
       int byte_value;
       while (byte_stream >> byte_value) {
         if (byte_value < 0 || byte_value > 255) {
-          logger_.logDebug(
-              rule + " \"" + signature + "\" signature contains wrong byte");
+          internal::coutDebug() <<
+              rule + " \"" + signature + "\" signature contains wrong byte";
           return false;
         }
-        logger_.logDebug(rule + " \"" + signature + "\" \"" +::std::to_string(byte_value) +
-            "\" payload contains byte");
+        internal::coutDebug() << rule + " \"" + signature + "\" \"" +::std::to_string(byte_value) +
+            "\" payload contains byte";
         payload.push_back(internal::byte(byte_value & 0xFF));
       }
 
       if (payload.size() == 0) {
-        logger_.logDebug(
-            rule + " \"" + signature + "\" signature contains no payload");
+        internal::coutDebug() <<
+            rule + " \"" + signature + "\" signature contains no payload";
         return false;
       }
 
       ::std::optional<uint32_t> offset;
       if (components.size() == 2) {
         offset = static_cast<uint32_t>(::std::stoi(components[1]));
-        logger_.logDebug(rule + " \"" + signature + "\" \"" + ::std::to_string(*offset) +
-            "\" payload contains offset");
+        internal::coutDebug() << rule + " \"" + signature + "\" \"" + ::std::to_string(*offset) +
+            "\" payload contains offset";
       }
 
       const internal::Signature* sig;

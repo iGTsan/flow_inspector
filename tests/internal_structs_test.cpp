@@ -118,11 +118,11 @@ TEST(RuleTest, AddSignatureWithValidPointer) {
 }
 
 
-TEST(RuleTest, CheckReturnsFalseForEmptySignatures) {
+TEST(RuleTest, CheckReturnsTrueForEmptySignatures) {
   Rule rule("TestRule", Event::EventType::Alert);
   Packet packet(::std::vector<byte>{1, 2, 3, 4, 5});
 
-  EXPECT_FALSE(rule.check(packet));
+  EXPECT_TRUE(rule.check(packet));
 }
 
 

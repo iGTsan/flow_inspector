@@ -22,6 +22,8 @@ public:
       ("j,cores", "Number of cores", ::cxxopts::value<uint8_t>()->default_value("1"))
       ("o,log-output", "Output file for logs",
           ::cxxopts::value<::std::string>()->default_value("default.log"))
+      ("w,write", "Output pcap file",
+          ::cxxopts::value<::std::string>()->default_value("default.pcap"))
       ("r,rules", "Rules file to read from", ::cxxopts::value<::std::string>()->default_value(""))
       ("log-level", "Level of logging (debug, info, warning, error)",
           ::cxxopts::value<::std::string>()->default_value("1"))
@@ -60,6 +62,7 @@ public:
       cores_ = result["cores"].as<uint8_t>();
       rules_file_ = result["rules"].as<::std::string>();
       output_log_file_ = result["log-output"].as<::std::string>();
+      pcap_output_file_ = result["write"].as<::std::string>();
 
     } catch (const ::cxxopts::exceptions::exception& e) {
       ::std::cout << options.help() << ::std::endl;
@@ -82,6 +85,7 @@ public:
       ids_->loadRules(rules_file_);
     }
     ids_->setOutputFilename(output_log_file_);
+    ids_->setPcapOutputFilename(pcap_output_file_);
     ids_->setLogLevel(log_level_);
     ids_->start();
   }
@@ -96,6 +100,7 @@ private:
   ::std::string mode_;
   ::std::string interface_;
   ::std::string pcap_file_;
+  ::std::string pcap_output_file_;
   ::std::string rules_file_;
   ::std::string output_log_file_;
   uint8_t cores_;

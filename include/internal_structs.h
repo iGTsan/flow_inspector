@@ -16,12 +16,14 @@
 #include <cstdlib>
 #include <unordered_set>
 
+#include <pcap.h>
+
 #include "debug_logger.h"
 
 #define VERIFY(expression, message) \
   do { \
     if (!(expression)) { \
-      ::std::cerr << "Assertion failed: (" << #expression << "), function " << __FUNCTION__ \
+      ::std::cerr << "\nAssertion failed: (" << #expression << "), function " << __FUNCTION__ \
           << ", file " << __FILE__ << ", line " << __LINE__ << ".\n" << message << std::endl; \
       ::std::abort(); \
     } \
@@ -91,7 +93,10 @@ private:
 struct Packet {
   Packet(const ByteVector& data) noexcept
     : bytes{data}
-  {}
+  {
+    header.len = data->size();
+    header.caplen = data->size();
+  }
 
   Packet(const ::std::vector<byte>& data) noexcept
     : Packet{ByteVector{data}}
@@ -120,6 +125,7 @@ struct Packet {
   }
 
   ByteVector bytes;
+  struct pcap_pkthdr header;
   ::std::unordered_set<const Signature*> signatures;
 };
 
@@ -200,6 +206,7 @@ struct Event {
   enum class EventType {
     Alert,
     Notify,
+    SaveToPcap,
     TestEvent,
     TestEvent1,
     TestEvent2,
@@ -209,6 +216,7 @@ struct Event {
   static bool isValidEventType(const std::string& event) {
     return event == "Alert" ||
       event == "Notify" ||
+      event == "SaveToPcap" ||
       event == "TestEvent" ||
       event == "TestEvent1" ||
       event == "TestEvent2";
@@ -217,6 +225,7 @@ struct Event {
   static EventType stringToEventType(const std::string& event) {
     if (event == "Alert") return EventType::Alert;
     if (event == "Notify") return EventType::Notify;
+    if (event == "SaveToPcap") return EventType::SaveToPcap;
     if (event == "TestEvent") return EventType::TestEvent;
     if (event == "TestEvent1") return EventType::TestEvent1;
     if (event == "TestEvent2") return EventType::TestEvent2;
@@ -249,7 +258,7 @@ public:
   }
 
   bool check(const Packet& packet) const noexcept {
-    return!signatures_.empty() &&
+    return signatures_.empty() ||
       ::std::all_of(signatures_.begin(), signatures_.end(),
         [&packet](const Signature* signature) { return signature->check(packet); });
   }
