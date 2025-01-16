@@ -42,7 +42,13 @@ public:
   }
 
   void setStatSpeed(size_t interval) noexcept {
+    done_.store(true);
+    if (stats_printer_.joinable()) {
+      stats_printer_.join();
+    }
+    done_.store(false);
     stat_interval_ = interval;
+    stats_printer_ = ::std::thread{&Analyzer::printStats, this};
   }
 
   ~Analyzer() noexcept {
