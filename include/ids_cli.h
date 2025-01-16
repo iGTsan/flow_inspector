@@ -56,7 +56,7 @@ public:
       const auto& log_level = result["log-level"].as<::std::string>();
       if (log_level == "debug") {
         log_level_ = Logger::LogLevel::DEBUG;
-        internal::getCoutDebug().enable();
+        internal::getCoutLevel().enable();
       }
 
       cores_ = result["cores"].as<uint8_t>();
@@ -87,6 +87,7 @@ public:
     ids_->setOutputFilename(output_log_file_);
     ids_->setPcapOutputFilename(pcap_output_file_);
     ids_->setLogLevel(log_level_);
+    
     ids_->start();
   }
 

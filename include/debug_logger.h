@@ -24,36 +24,46 @@ private:
 };
 
 
-class CoutDebug {
+class CoutLevel {
 public:
-  ::std::ostream& getStream() noexcept {
-    if (debug_enabled_) {
+  enum class Level {
+    INFO,
+    DEBUG,
+  };
+
+  ::std::ostream& getStream(CoutLevel::Level level) noexcept {
+    if (level <= level_) {
       return ::std::cout;
     }
     return null_ostream;
   }
 
   void enable() noexcept {
-    debug_enabled_ = true;
+    level_ = Level::DEBUG;
   }
 
   void disable() noexcept {
-    debug_enabled_ = false;
+    level_ = Level::INFO;
   }
 
 private:
-  bool debug_enabled_{false};
   NullOStream null_ostream;
+  Level level_{Level::INFO};
 };
 
-inline CoutDebug& getCoutDebug() {
-  static CoutDebug cout_debug;
-  return cout_debug;
+inline CoutLevel& getCoutLevel() {
+  static CoutLevel cout_level;
+  return cout_level;
 }
 
 inline ::std::ostream& coutDebug() {
-  auto& cout_debug = getCoutDebug();
-  return cout_debug.getStream();
+  auto& cout_level = getCoutLevel();
+  return cout_level.getStream(CoutLevel::Level::DEBUG);
+}
+
+inline ::std::ostream& coutInfo() {
+  auto& cout_level = getCoutLevel();
+  return cout_level.getStream(CoutLevel::Level::INFO);
 }
 
 }  // namespace flow_inspector::internal

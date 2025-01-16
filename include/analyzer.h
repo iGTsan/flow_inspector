@@ -87,8 +87,8 @@ private:
         components.push_back(item);
       }
       if (components.size() != 1 && components.size() != 2) {
-        internal::coutDebug() <<
-            rule + " \"" + signature + "\" signature contains wrong number of components";
+        internal::coutDebug() << rule + " \"" + signature
+            + "\" signature contains wrong number of components: " << components.size();
         return false;
       }
       
@@ -153,6 +153,8 @@ private:
 
 
 inline bool loadFile(Analyzer& analyzer, const std::string& filename) {
+  internal::coutInfo() << "Starting reading rules" << std::endl;
+  size_t cnt = 0;
   ::std::ifstream file(filename);
   if (!file.is_open()) {
     ::std::cerr << "Can't open file " << filename << std::endl;
@@ -163,7 +165,9 @@ inline bool loadFile(Analyzer& analyzer, const std::string& filename) {
     if (!analyzer.parseRule(line)) {
       return false;
     }
+    cnt++;
   }
+  internal::coutInfo() << "Successfully read " << cnt << " rules" << std::endl;
   return true;
 }
 

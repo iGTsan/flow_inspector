@@ -26,6 +26,7 @@ public:
   }
 
   void start() noexcept {
+    internal::coutInfo() << "Starting reading packets" << std::endl;
     origin_->startReading();
   }
 
