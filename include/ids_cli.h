@@ -15,19 +15,25 @@ public:
     ::cxxopts::Options options("IdsCli", "CLI wrapper for flow inspector");
 
     options.add_options()
-      ("m,mode", "Mode: pcap or live", ::cxxopts::value<::std::string>())
-      ("i,interface", "Interface to sniff (for live mode only)",
+      ("m,mode", "Operating mode: 'pcap' for file input or 'live' for real-time capture",
           ::cxxopts::value<::std::string>())
-      ("f,file", "PCAP file to read from (for pcap only)", ::cxxopts::value<::std::string>())
-      ("j,cores", "Number of cores", ::cxxopts::value<uint8_t>()->default_value("1"))
-      ("o,log-output", "Output file for logs",
+      ("i,interface", "Network interface for live mode capture (only used with live mode)",
+          ::cxxopts::value<::std::string>())
+      ("f,file", "Path to the PCAP file for input (applicable only in pcap mode)",
+          ::cxxopts::value<::std::string>())
+      ("j,cores", "Number of processor cores to utilize",
+          ::cxxopts::value<uint8_t>()->default_value("1"))
+      ("o,log-output", "Path to the file for logging output",
           ::cxxopts::value<::std::string>()->default_value("default.log"))
-      ("w,write", "Output pcap file",
+      ("w,write", "Destination PCAP file to save captured data",
           ::cxxopts::value<::std::string>()->default_value("default.pcap"))
-      ("r,rules", "Rules file to read from", ::cxxopts::value<::std::string>()->default_value(""))
-      ("log-level", "Level of logging (debug, info, warning, error)",
-          ::cxxopts::value<::std::string>()->default_value("1"))
-      ("h,help", "Print usage");
+      ("r,rules", "Path to the file containing rules for packet processing",
+          ::cxxopts::value<::std::string>()->default_value(""))
+      ("s,stat-speed", "Interval (in seconds) for printing capture statistics",
+          ::cxxopts::value<::size_t>()->default_value("0"))
+      ("log-level", "Logging to stdout verbosity level: debug or info",
+          ::cxxopts::value<::std::string>()->default_value("info"))
+      ("h,help", "Display this help message");
     try {
       auto result = options.parse(argc, argv);
 
@@ -63,6 +69,7 @@ public:
       rules_file_ = result["rules"].as<::std::string>();
       output_log_file_ = result["log-output"].as<::std::string>();
       pcap_output_file_ = result["write"].as<::std::string>();
+      stat_speed_ = result["stat-speed"].as<size_t>();
 
     } catch (const ::cxxopts::exceptions::exception& e) {
       ::std::cout << options.help() << ::std::endl;
@@ -87,6 +94,7 @@ public:
     ids_->setOutputFilename(output_log_file_);
     ids_->setPcapOutputFilename(pcap_output_file_);
     ids_->setLogLevel(log_level_);
+    ids_->setStatSpeed(stat_speed_);
     
     ids_->start();
   }
@@ -105,6 +113,7 @@ private:
   ::std::string rules_file_;
   ::std::string output_log_file_;
   uint8_t cores_;
+  size_t stat_speed_;
   ::std::optional<IDS> ids_;
   Logger::LogLevel log_level_{Logger::LogLevel::INFO};
 };

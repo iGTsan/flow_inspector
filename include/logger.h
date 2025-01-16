@@ -144,7 +144,7 @@ private:
   LogLevel log_level_ = LogLevel::INFO;
   ::std::mutex file_mutex_;
   ::std::string output_filename_{"default.log"};
-  bool file_openned_;
+  bool file_openned_{false};
   ::std::atomic<bool> done_;
   ::std::thread log_rotator_thread_{&Logger::logRotator, this};
 };

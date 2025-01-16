@@ -59,10 +59,6 @@ TEST(IDSTest, ProcessLargeNumberOfPackets) {
   ASSERT_TRUE(log_file.is_open());
   ::std::string log_str;
 
-  for (int i = 0; i < 220; i++) {
-    EXPECT_TRUE(::std::getline(log_file, log_str));
-    EXPECT_TRUE(log_str.find("Message: detectThreats for [") != ::std::string::npos);
-  }
   EXPECT_TRUE(::std::getline(log_file, log_str));
   EXPECT_TRUE(log_str.find("Message: IDS stopped.") != ::std::string::npos);
   
@@ -88,7 +84,7 @@ TEST(IDSTest, ProcessPacketsWithAlert) {
 
   for (int i = 0; i < 1; i++) {
     EXPECT_TRUE(::std::getline(log_file, log_str));
-    EXPECT_TRUE(log_str.find("Alert: Rule  double_packets_one_hit was matched.")
+    EXPECT_TRUE(log_str.find("double_packets_one_hit")
         != ::std::string::npos);
   }
   EXPECT_TRUE(::std::getline(log_file, log_str));

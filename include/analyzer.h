@@ -41,6 +41,10 @@ public:
     return signatures_.size();
   }
 
+  void setStatSpeed(size_t interval) noexcept {
+    stat_interval_ = interval;
+  }
+
   ~Analyzer() noexcept {
     done_.store(true);
     if (stats_printer_.joinable()) {
@@ -153,11 +157,11 @@ private:
 
   void printStats() {
     size_t current_count;
-    while (!done_.load()) {
+    while (!done_.load() && stat_interval_) {
       current_count = packets_count_.exchange(0);
       internal::coutInfo()
           << "Current speed: " << current_count << " packets per second" << std::endl;
-      ::std::this_thread::sleep_for(std::chrono::seconds(1));
+      ::std::this_thread::sleep_for(std::chrono::seconds(stat_interval_));
     }
   }
 
@@ -170,6 +174,7 @@ private:
   EventsHandler& events_handler_;
   ::std::atomic<size_t> packets_count_;
   ::std::atomic<bool> done_{false};
+  ::std::size_t stat_interval_{0};
   ::std::thread stats_printer_{&Analyzer::printStats, this};
 };
 

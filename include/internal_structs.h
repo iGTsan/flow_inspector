@@ -124,6 +124,9 @@ struct Packet {
   }
 
   ::std::string toShortString() const noexcept {
+    if (bytes->size() < 10) {
+      return toString();
+    }
     return "";
   }
 

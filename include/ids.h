@@ -42,6 +42,10 @@ public:
     logger_.setLevel(level);
   }
 
+  void setStatSpeed(size_t interval) noexcept {
+    analyzer_.setStatSpeed(interval);
+  }
+
   void setOutputFilename(const ::std::string& filename) noexcept {
     logger_.setOutputFilename(filename);
   }

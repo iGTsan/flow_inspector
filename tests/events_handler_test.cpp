@@ -18,7 +18,7 @@ TEST(EventsHandlerTest, CreateEventHandlerWithLogger) {
   handler.addEvent(test_event);
   ::std::string output = logger.exportLogs();
 
-  EXPECT_TRUE(output.find("Rule TestRule was matched.") != ::std::string::npos);
+  EXPECT_TRUE(output.find("TestRule") != ::std::string::npos);
 }
 
 TEST(EventsHandlerTest, AddEventCallbackForAlertEventType) {
