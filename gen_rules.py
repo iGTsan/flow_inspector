@@ -12,7 +12,7 @@ def random_byte_array():
 
 def random_block():
     x = ' '.join(random_byte_array())
-    y = random.randint(0, 1499) if random.choice([True] * 10 + [False]) else None
+    y = random.randint(0, 1499)
     return f" ([{x}]" + (f", {y}" if y is not None else "") + ")"
 
 def generate_file(filename, num_lines):
