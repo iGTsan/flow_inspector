@@ -28,9 +28,9 @@ public:
     log_level_ = level;
   }
 
-  void logEvent(const internal::LogEntry& entry) noexcept {
+  void logEvent(internal::LogEntry entry) noexcept {
     ::std::lock_guard<std::mutex> lock{log_entries_mutex_};
-    log_entries_.push_back(entry);
+    log_entries_.push_back(::std::move(entry));
   }
 
   void logPacket(internal::Packet packet) noexcept {

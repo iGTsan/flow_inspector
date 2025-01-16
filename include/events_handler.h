@@ -20,11 +20,10 @@ public:
   {
     addEventCallback(internal::Event::EventType::Alert,
         [this](const internal::Event& event) {
-          internal::Alert alert("Rule " + event.rule.getName() + " was matched.");
           logger_.logEvent(internal::LogEntry{
             .timestamp = logger_.getTime(),
             .packet = event.packet,
-            .alert = alert,
+            .alert = event.rule.getName(),
           });
         });
   }
@@ -38,7 +37,7 @@ public:
       callback(event);
     }
   }
-  
+
 private:
   ::std::unordered_map<internal::Event::EventType, ::std::vector<EventCallback>> callbacks_;
   Logger& logger_;

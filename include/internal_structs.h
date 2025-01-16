@@ -172,8 +172,8 @@ public:
   }
 
   bool check(const Packet& packet) const noexcept {
-    coutDebug() << "Checking signature ";
-    payload_.print();
+    // coutDebug() << "Checking signature ";
+    // payload_.print();
     // if (packet.signatures.contains(this)) {
     //   return true;
     // }
@@ -259,9 +259,10 @@ public:
   }
 
   bool check(const Packet& packet) const noexcept {
-    return signatures_.empty() ||
+    auto result = signatures_.empty() ||
       ::std::all_of(signatures_.begin(), signatures_.end(),
         [&packet](const Signature* signature) { return signature->check(packet); });
+    return result;
   }
 
   bool operator==(const Rule& other) const noexcept {
