@@ -1,5 +1,6 @@
 #pragma once
 
+#include <thread>
 #include <unordered_set>
 
 #include "logger.h"
@@ -18,7 +19,8 @@ public:
   {}
 
   void detectThreats(const internal::Packet& packet) {
-    logger_.logDebug("detectThreats for " + packet.toString());
+    packets_count_.fetch_add(1);
+    // logger_.logDebug("detectThreats for " + packet.toString());
     for (const auto&  rule : rules_) {
       if (rule.check(packet)) {
         events_handler_.addEvent(internal::Event{
@@ -37,6 +39,13 @@ public:
 
   size_t getSignaturesCount() const {
     return signatures_.size();
+  }
+
+  ~Analyzer() noexcept {
+    done_.store(true);
+    if (stats_printer_.joinable()) {
+      stats_printer_.join();
+    }
   }
 
 private:
@@ -142,6 +151,16 @@ private:
     rules_.insert(::std::move(rule));
   }
 
+  void printStats() {
+    size_t current_count;
+    while (!done_.load()) {
+      current_count = packets_count_.exchange(0);
+      internal::coutInfo()
+          << "Current speed: " << current_count << " packets per second" << std::endl;
+      ::std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+  }
+
   ::std::unordered_set<internal::Rule> rules_;
   ::std::unordered_set<
       ::std::unique_ptr<internal::Signature>,
@@ -149,6 +168,9 @@ private:
       internal::UniquePtrSignatureEqual> signatures_;
   Logger& logger_;
   EventsHandler& events_handler_;
+  ::std::atomic<size_t> packets_count_;
+  ::std::atomic<bool> done_{false};
+  ::std::thread stats_printer_{&Analyzer::printStats, this};
 };
 
 

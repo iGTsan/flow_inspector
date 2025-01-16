@@ -121,6 +121,9 @@ struct Packet {
     }
     ss << "]";
     return ss.str();
+  }
+
+  ::std::string toShortString() const noexcept {
     return "";
   }
 
@@ -171,11 +174,9 @@ public:
   bool check(const Packet& packet) const noexcept {
     coutDebug() << "Checking signature ";
     payload_.print();
-    coutDebug() << "Packet payload ";
-    packet.bytes.print();
-    if (packet.signatures.contains(this)) {
-      return true;
-    }
+    // if (packet.signatures.contains(this)) {
+    //   return true;
+    // }
     if (payload_offset_) {
       return *payload_offset_ + payload_->size() <= packet.bytes->size() &&
         ::std::equal(payload_->begin(), payload_->end(), packet.bytes->begin() + *payload_offset_);

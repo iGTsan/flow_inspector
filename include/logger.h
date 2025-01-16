@@ -77,7 +77,7 @@ public:
     for (const internal::LogEntry& entry : log_entries) {
       ss << entry.timestamp << " ";
       if (entry.packet) {
-          ss << "Packet: " << entry.packet->toString() << " ";
+          ss << "Packet: " << entry.packet->toShortString() << " ";
       }
       if (entry.alert) {
           ss << "Alert: " << entry.alert->toString() << " ";

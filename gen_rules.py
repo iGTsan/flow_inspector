@@ -7,19 +7,18 @@ def random_string(length=10):
     return ''.join(random.choices(chars, k=length))
 
 def random_byte_array():
-    length = random.randint(1, 100)
+    length = random.randint(1, 3)
     return [str(random.randint(0, 255)) for _ in range(length)]
 
 def random_block():
     x = ' '.join(random_byte_array())
-    y = random.randint(0, 1499) if random.choice([True, False]) else None
+    y = random.randint(0, 1499) if random.choice([True] * 10 + [False]) else None
     return f" ([{x}]" + (f", {y}" if y is not None else "") + ")"
 
 def generate_file(filename, num_lines):
     event_types = [
         "Alert",
         "Notify",
-        "SaveToPcap",
         "TestEvent",
         "TestEvent1",
         "TestEvent2"
@@ -33,4 +32,4 @@ def generate_file(filename, num_lines):
             blocks = ";".join(random_block() for _ in range(num_blocks))
             file.write(f"{event}; {rule};{blocks}\n")
 
-generate_file('build/a_lot_of.rule', 47000)
+generate_file('build/a_lot_of.rule', 1000)
