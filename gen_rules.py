@@ -28,7 +28,7 @@ def generate_file(filename, num_lines):
         for _ in range(num_lines):
             event = random.choice(event_types)
             rule = random_string(random.randint(5, 15))
-            num_blocks = random.randint(0, 3)
+            num_blocks = random.randint(1, 3)
             blocks = ";".join(random_block() for _ in range(num_blocks))
             file.write(f"{event}; {rule};{blocks}\n")
 
