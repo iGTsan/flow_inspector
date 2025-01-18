@@ -12,7 +12,7 @@ namespace flow_inspector {
 class IdsCli {
 public:
   IdsCli(int argc, char **argv) {
-    ::cxxopts::Options options("IdsCli", "CLI wrapper for flow inspector");
+    ::cxxopts::Options options("FlowInspector", "CLI wrapper for flow inspector");
 
     options.add_options()
       ("m,mode", "Operating mode: 'pcap' for file input or 'live' for real-time capture",

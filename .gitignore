@@ -1,6 +1,6 @@
 build
 settings.json
 testlog
-TrafficAnalyzer
+FlowInspector
 default.log
 default.pcap

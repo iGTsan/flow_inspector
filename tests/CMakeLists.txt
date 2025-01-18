@@ -45,7 +45,7 @@ add_executable(runTests
     pcap_writer_test.cpp
 )
 
-target_link_libraries(runTests GTest::gtest GTest::gtest_main TrafficAnalyzerLibrary)
+target_link_libraries(runTests GTest::gtest GTest::gtest_main FlowInspectorLibrary)
 
 include(GoogleTest)
 gtest_discover_tests(runTests)
