@@ -11,12 +11,14 @@ set(CONCURRENTQUEUE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/concurre
 set(CXXOPTS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cxxopts/include)
 
 find_package(Pcap REQUIRED)
+add_subdirectory("${CMAKE_SOURCE_DIR}/third_party/PcapPlusPlus")
 
 add_library(FlowInspectorLibrary src/ids_lib.cpp)
 target_include_directories(FlowInspectorLibrary PUBLIC include)
 include_directories(${CONCURRENTQUEUE_INCLUDE_DIR})
 include_directories(${CXXOPTS_INCLUDE_DIR})
 target_link_libraries(FlowInspectorLibrary ${PCAP_LIBRARIES})
+target_link_libraries(FlowInspectorLibrary Pcap++ Packet++ Common++)
 
 add_executable(FlowInspector src/main.cpp)
 target_link_libraries(FlowInspector FlowInspectorLibrary)

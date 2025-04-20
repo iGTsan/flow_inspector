@@ -1,6 +1,7 @@
 build
 settings.json
 testlog
+log
 FlowInspector
 default.log
 default.pcap

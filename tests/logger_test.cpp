@@ -64,7 +64,7 @@ TEST(LoggerTest, ExportLogsToFile) {
   ::std::string fileContent((::std::istreambuf_iterator<char>(file)),
       ::std::istreambuf_iterator<char>());
 
-  EXPECT_TRUE(fileContent.find("Packet: [1 2 3 4]") != ::std::string::npos);
+  EXPECT_TRUE(fileContent.find("Packet: [1 2 3 4]") != ::std::string::npos) << fileContent;
   EXPECT_TRUE(fileContent.find("Alert: Test alert message") != ::std::string::npos);
 
   file.close();
@@ -114,14 +114,14 @@ TEST(LoggerTest, LogRotationWhenMaxEntriesExceeded) {
   
   logger.setOutputFilename(tempFileName);
 
-  for (int i = 0; i <= Logger::MAX_LOG_ENTRIES; ++i) {
+  for (int i = 0; i <= Logger::DEFAULT_MAX_LOG_ENTRIES; ++i) {
     internal::Packet packet{::std::vector<internal::byte>{static_cast<internal::byte>(i)}};
     logger.logPacket(packet);
   }
 
-  ::std::this_thread::sleep_for(::std::chrono::seconds(2));
+  ::std::this_thread::sleep_for(::std::chrono::milliseconds(10));
 
-  for (int i = 0; i < Logger::MAX_LOG_ENTRIES - 100; ++i) {
+  for (int i = 0; i < Logger::DEFAULT_MAX_LOG_ENTRIES - 100; ++i) {
     internal::Packet packet{::std::vector<internal::byte>{static_cast<internal::byte>(i)}};
     logger.logPacket(packet);
   }
@@ -140,7 +140,7 @@ TEST(LoggerTest, LogRotationWhenMaxEntriesExceeded) {
     ++logEntryCount;
     pos += 7;
   }
-  EXPECT_LE(logEntryCount, Logger::MAX_LOG_ENTRIES + 1);
+  EXPECT_LE(logEntryCount, Logger::DEFAULT_MAX_LOG_ENTRIES + 1);
 
   file.close();
   ::std::remove(tempFileName.c_str());
@@ -170,7 +170,6 @@ TEST(LoggerTest, DestructorBehavior) {
     for (int i = 0; i < 100; ++i) {
       logger.logMessage("Test message " + ::std::to_string(i));
     }
-    ::std::this_thread::sleep_for(::std::chrono::milliseconds(100));
   }
   
   // The logger should be destroyed here, and the log_rotator_thread should be joined

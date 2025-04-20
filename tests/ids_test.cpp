@@ -1,6 +1,7 @@
 
 #include <gtest/gtest.h>
 #include "ids.h"
+#include "logger.h"
 #include "pcap_reader.h"
 #include <fstream>
 
@@ -74,6 +75,7 @@ TEST(IDSTest, ProcessPacketsWithAlert) {
     reader->setFilename("double_packets.pcap");
     IDS ids{4, ::std::move(reader)};
     ids.setOutputFilename(testOutputFilename);
+    ids.setLogLevel(Logger::LogLevel::INFO);
     ids.loadRules("double_packets_one_hit.rule");
     ids.start();
   }
@@ -88,7 +90,7 @@ TEST(IDSTest, ProcessPacketsWithAlert) {
         != ::std::string::npos);
   }
   EXPECT_TRUE(::std::getline(log_file, log_str));
-  EXPECT_TRUE(log_str.find("Message: IDS stopped.") != ::std::string::npos);
+  EXPECT_TRUE(log_str.find("Message: IDS stopped.") != ::std::string::npos) << log_str;
   
   log_file.close();
 }
