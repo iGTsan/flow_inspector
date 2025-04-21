@@ -1,23 +1,27 @@
-
 #pragma once
 
-#include <pcap.h>
+#include <PcapLiveDeviceList.h>
+#include <PcapLiveDevice.h>
 #include <iostream>
-#include <cstring>
+#include <string>
+#include <thread>
+#include <chrono>
 #include "logger.h"
 #include "events_handler.h"
 #include "internal_structs.h"
 #include "packet_origin.h"
 
+
 namespace flow_inspector {
+
 
 class TrafficCapturer : public PacketOrigin {
 public:
-  TrafficCapturer() : handle_(nullptr) {}
+  TrafficCapturer() : device_(nullptr) {}
 
   ~TrafficCapturer() {
-    if (handle_) {
-      pcap_close(handle_);
+    if (device_) {
+      device_->stopCapture();
     }
   }
 
@@ -26,43 +30,42 @@ public:
   }
 
   void startReading() noexcept override {
-    char error_buffer[PCAP_ERRBUF_SIZE];
-    bpf_u_int32 subnet_mask, ip;
-
-    if (pcap_lookupnet(interface_name_.c_str(), &ip, &subnet_mask, error_buffer) == -1) {
-      ::std::cerr << "Can't get netmask for device " << interface_name_
-          << ": " << error_buffer << ::std::endl;
-      ip = 0;
-      subnet_mask = 0;
+    device_ = ::pcpp::PcapLiveDeviceList::getInstance().getPcapLiveDeviceByName(interface_name_);
+    if (device_ == nullptr) {
+      ::std::cerr << "Couldn't find device " << interface_name_ << ::std::endl;
+      return;
     }
-
-    handle_ = pcap_open_live(interface_name_.c_str(), BUFSIZ, 1, 1000, error_buffer);
-    if (handle_ == nullptr) {
-      ::std::cerr << "Couldn't open device " << interface_name_
-          << ": " << error_buffer << ::std::endl;
+    
+    if (!device_->open()) {
+      ::std::cerr << "Couldn't open device " << interface_name_ << ::std::endl;
       return;
     }
 
+    device_->startCapture(onPacketArrives, this);
+
+    // Wait for reading to complete
     while (!isDoneReading()) {
-      pcap_loop(handle_, 0, packetHandler, reinterpret_cast<u_char*>(this));
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
+    device_->stopCapture();
+    device_->close();
   }
 
   void internalStopReading() noexcept override {
-    if (handle_) {
-      pcap_breakloop(handle_);
+    if (device_) {
+      device_->stopCapture();
     }
   }
 
 private:
-  static void packetHandler(
-      u_char *user_data, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
-    auto *capturer = reinterpret_cast<TrafficCapturer*>(user_data);
-    capturer->processPacket(pkthdr, packet);
+  static void onPacketArrives(::pcpp::RawPacket* rawPacket, ::pcpp::PcapLiveDevice* /*dev*/, void* userData) {
+    auto* capturer = reinterpret_cast<TrafficCapturer*>(userData);
+    capturer->processPacket(*rawPacket);
   }
 
   ::std::string interface_name_;
-  pcap_t *handle_;
+  ::pcpp::PcapLiveDevice* device_;
 };
 
 }  // namespace flow_inspector

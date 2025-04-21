@@ -3,48 +3,47 @@
 #include <functional>
 #include <filesystem>
 #include <memory>
+#include <iostream>
 
 #include "events_handler.h"
 #include "logger.h"
 #include "packet_origin.h"
 
-#include <pcap.h>
+#include "PcapFileDevice.h"
 
 
 namespace flow_inspector {
 
 
 class PcapReader: public PacketOrigin {
-public:
+ public:
   void setFilename(const ::std::string& filename) noexcept {
     input_file_ = filename;
   }
 
   void startReading() noexcept override {
-    char errbuf[PCAP_ERRBUF_SIZE];
-    
-    pcap_t* handle = pcap_open_offline(input_file_.c_str(), errbuf);
-    if (handle == nullptr) {
-        ::std::filesystem::path current_path = ::std::filesystem::current_path();
-        ::std::cerr << "Error opening pcap file: " << errbuf << ::std::endl;
-        ::std::cerr << "Current directory is " << current_path << ::std::endl;
-        return;
+    ::pcpp::IFileReaderDevice* reader = ::pcpp::IFileReaderDevice::getReader(input_file_);
+    if (!reader->open()) {
+      ::std::filesystem::path current_path = ::std::filesystem::current_path();
+      ::std::cerr << "Error opening pcap file: " << input_file_ << ::std::endl;
+      ::std::cerr << "Current directory is " << current_path << ::std::endl;
+      delete reader;
+      return;
     }
 
-    const u_char* packet;
-    struct pcap_pkthdr header;
-    while ((packet = pcap_next(handle, &header)) != nullptr && !isDoneReading()) {
-      processPacket(&header, packet);
+    ::pcpp::RawPacket raw_packet;
+    while (reader->getNextPacket(raw_packet) && !isDoneReading()) {
+      processPacket(raw_packet);
     }
 
-    pcap_close(handle);
+    reader->close();
+    delete reader;
   }
 
   void internalStopReading() noexcept override {}
 
-private:
-  ::std::string input_file_;
+ private:
+    ::std::string input_file_;
 };
-
 
 }  // namespace flow_inspector

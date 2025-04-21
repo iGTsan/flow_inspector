@@ -8,6 +8,7 @@ BUILD_TYPE="Release"
 ENABLE_VALGRIND=0
 
 COMPILER=clang++
+ROOT=$(pwd)
 
 case $SANITIZER in
     "")
@@ -50,16 +51,18 @@ case $SANITIZER in
         ;;
 esac
 
-mkdir -p build
-cd build
-cmake .. -DCMAKE_CXX_FLAGS="$SANITIZER_FLAGS" \
-    -DCMAKE_EXE_LINKER_FLAGS_DEBUG="$SANITIZER_FLAGS" \
-    -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-    -DCMAKE_CXX_COMPILER="$COMPILER"
-cmake --build . -- -j$(nproc)
 if [ "$ENABLE_VALGRIND" = "1" ]; then
-    cd tests
-    valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./runTests
+    # cd tests
+    # valgrind --leak-check=full --suppressions=$ROOT/valgrind.supp --show-leak-kinds=all --track-origins=yes ./runTests
+    docker build -f tests/docker_env/Dockerfile -t mymemcheck:latest .
+    docker run --rm mymemcheck:latest
 else
+    mkdir -p build
+    cd build
+    cmake .. -DCMAKE_CXX_FLAGS="$SANITIZER_FLAGS" \
+        -DCMAKE_EXE_LINKER_FLAGS_DEBUG="$SANITIZER_FLAGS" \
+        -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+        -DCMAKE_CXX_COMPILER="$COMPILER"
+    cmake --build . -- -j$(nproc)
     ctest --output-on-failure
 fi

@@ -66,7 +66,7 @@ private:
 
   void processPacket() noexcept {
     internal::coutDebug() << "thread started" << std::endl;
-    internal::Packet packet{{}};
+    internal::Packet packet{::std::vector<internal::byte>{}};
     while (getPacket(packet)) {
       for (const auto& callback : callbacks_) {
         callback(packet);

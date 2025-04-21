@@ -5,3 +5,5 @@ log
 FlowInspector
 default.log
 default.pcap
+.cache
+third_party/PcapPlusPlus/.cache/*

@@ -17,6 +17,7 @@
 #include <unordered_set>
 
 #include <pcap.h>
+#include "Packet.h"
 
 #include "debug_logger.h"
 
@@ -90,6 +91,14 @@ private:
 };
 
 
+inline ByteVector byteVectorFromPCPP(const ::pcpp::RawPacket& packet) {
+  const u_char* rawData = packet.getRawData();
+  size_t length = packet.getRawDataLen();
+
+  return ByteVector(::std::vector<byte>(rawData, rawData + length));
+}
+
+
 struct Packet {
   Packet(const ByteVector& data) noexcept
     : bytes{data}
@@ -101,6 +110,14 @@ struct Packet {
   Packet(const ::std::vector<byte>& data) noexcept
     : Packet{ByteVector{data}}
   {}
+
+  Packet(const ::pcpp::RawPacket& packet) noexcept
+    : bytes{byteVectorFromPCPP(packet)}
+  {
+
+    header.len = bytes->size_bytes();
+    header.caplen = bytes->size_bytes();
+  }
 
   bool operator==(const Packet& other) const noexcept {
     return bytes == other.bytes;

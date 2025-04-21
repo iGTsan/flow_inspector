@@ -2,11 +2,13 @@
 
 #include <functional>
 #include <vector>
+#include <atomic>
 
 #include <pcap.h>
 
 #include "internal_structs.h"
 #include "debug_logger.h"
+#include "Packet.h"
 
 
 namespace flow_inspector {
@@ -27,6 +29,10 @@ public:
     packet_processor_(internal::Packet{
       ::std::move(payload),
     });
+  }
+
+  void processPacket(const ::pcpp::RawPacket& packet) {
+    packet_processor_(internal::Packet{packet});
   }
 
   virtual void startReading() noexcept = 0;
