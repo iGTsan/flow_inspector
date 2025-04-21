@@ -1,1 +1,1 @@
-Alert; 2_sig; ([1 2 3 4]); ([1 2 3 7])
+Alert; 2_sig; raw_bytes([1 2 3 4]); raw_bytes([1 2 3 7])

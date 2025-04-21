@@ -6,6 +6,23 @@
 #include "logger.h"
 #include "events_handler.h"
 #include "internal_structs.h"
+#include "raw_bytes_signature.h"
+
+namespace {
+::std::string trim(const ::std::string& str) {
+  auto start = str.begin();
+  while (start != str.end() && ::std::isspace(*start)) {
+      start++;
+  }
+
+  auto end = str.end();
+  do {
+      end--;
+  } while (::std::distance(start, end) > 0 && ::std::isspace(*end));
+
+  return ::std::string(start, end + 1);
+}
+}  // namespace
 
 
 namespace flow_inspector {
@@ -16,7 +33,10 @@ public:
   Analyzer(Logger& logger, EventsHandler& events_handler) noexcept
     : logger_{logger}
     , events_handler_{events_handler}
-  {}
+  {
+    internal::SignatureFactory::instance().registerSignatureType(
+        "raw_bytes", internal::RawBytesSignature::createRawBytesSignature);
+  }
 
   void detectThreats(const internal::Packet& packet) {
     packets_count_.fetch_add(1);
@@ -59,11 +79,6 @@ public:
   }
 
 private:
-  // parses the rules that satisfy the following pattern
-  // event; name; signature1; signature2 ...
-  // where event is a member of ::flow_inspector::internal::Event::EventType
-  // signature1 is (payload, offset) or just (payload)
-  // payload is a vector bytes [1 2 3...], offset is a uint32_t
   bool tryParseNative(const ::std::string& rule) {
     ::std::istringstream stream(rule);
     ::std::string event_str;
@@ -85,9 +100,9 @@ private:
       return false;
     }
 
-    internal::Rule result(name, internal::Event::stringToEventType(event_str));
     ::std::string signature;
-    while (std::getline(stream, signature, ';')) {
+    internal::Rule result(name, internal::Event::stringToEventType(event_str));
+    while (::std::getline(stream, signature, ';')) {
       size_t open_bracket = signature.find('(');
       size_t close_bracket = signature.find(')', open_bracket);
       if (open_bracket == ::std::string::npos || close_bracket == ::std::string::npos) {
@@ -96,63 +111,21 @@ private:
         return false;
       }
 
-      ::std::string payload_str =
-          signature.substr(open_bracket + 1, close_bracket - open_bracket - 1);
-      ::std::istringstream payload_stream(payload_str);
-      ::std::string item;
-      ::std::vector<::std::string> components;
+      ::std::string type = trim(signature.substr(0, open_bracket));
+      ::std::string initString = signature.substr(open_bracket + 1, close_bracket - open_bracket - 1);
 
-      while (::std::getline(payload_stream, item, ',')) {
-        components.push_back(item);
-      }
-      if (components.size() != 1 && components.size() != 2) {
-        internal::coutDebug() << rule + " \"" + signature
-            + "\" signature contains wrong number of components: " << components.size();
-        return false;
-      }
-      
-      ::std::vector<internal::byte> payload;
-      ::std::istringstream byte_stream(components[0]);
-      char bracket;
-      byte_stream >> bracket;
-      int byte_value;
-      while (byte_stream >> byte_value) {
-        if (byte_value < 0 || byte_value > 255) {
-          internal::coutDebug() <<
-              rule + " \"" + signature + "\" signature contains wrong byte";
-          return false;
-        }
-        internal::coutDebug() << rule + " \"" + signature + "\" \"" +::std::to_string(byte_value) +
-            "\" payload contains byte";
-        payload.push_back(internal::byte(byte_value & 0xFF));
-      }
-
-      if (payload.size() == 0) {
+      auto uniq_sig = internal::SignatureFactory::instance().createSignature(type, initString);
+      if (!uniq_sig) {
         internal::coutDebug() <<
-            rule + " \"" + signature + "\" signature contains no payload";
+            rule + " \"" + signature + "\" unsupported signature type \"" + type + "\"\n";
         return false;
       }
-
-      ::std::optional<uint32_t> offset;
-      if (components.size() == 2) {
-        offset = static_cast<uint32_t>(::std::stoi(components[1]));
-        internal::coutDebug() << rule + " \"" + signature + "\" \"" + ::std::to_string(*offset) +
-            "\" payload contains offset";
-      }
-
-      const internal::Signature* sig;
-      if (offset) {
-        const auto& it = signatures_.insert(
-            ::std::make_unique<internal::Signature>(payload, *offset)).first;
-        sig = it->get();
-      } else {
-        const auto& it = signatures_.insert(
-            ::std::make_unique<internal::Signature>(payload)).first;
-        sig = it->get();
-      }
+      const auto& it = signatures_.insert(::std::move(uniq_sig)).first;
+      auto sig = it->get();
       result.addSignature(sig);
     }
 
+    // Заглушка для Rule и логики загрузки правила
     loadRule(::std::move(result));
     return true;
   }

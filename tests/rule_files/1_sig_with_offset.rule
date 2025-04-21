@@ -1,1 +1,1 @@
-Alert; 1_sig; ([1 2 3 4], 1)
+Alert; 1_sig; raw_bytes([1 2 3 4], 1)

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "internal_structs.h"
+#include "raw_bytes_signature.h"
 
 
 namespace flow_inspector::internal {
@@ -45,7 +46,7 @@ TEST(AlertTest, WithVeryLongMessage) {
 
 TEST(SignatureTest, ConstructorWithEmptyPayload) {
   ::std::vector<byte> emptyPayload;
-  Signature signature(emptyPayload);
+  RawBytesSignature signature(emptyPayload);
   
   Packet packet{rawPacketFromVector(::std::vector<byte>{1, 2, 3, 4, 5})};
   EXPECT_TRUE(signature.check(packet));
@@ -54,7 +55,7 @@ TEST(SignatureTest, ConstructorWithEmptyPayload) {
 
 TEST(SignatureTest, ConstructorWithNonEmptyPayload) {
   ::std::vector<byte> payload = {1, 2, 3, 4, 5};
-  Signature signature(payload);
+  RawBytesSignature signature(payload);
   
   Packet matchingPacket{rawPacketFromVector(::std::vector<byte>{0, 1, 2, 3, 4, 5, 6})};
   EXPECT_TRUE(signature.check(matchingPacket));
@@ -67,7 +68,7 @@ TEST(SignatureTest, ConstructorWithNonEmptyPayload) {
 TEST(SignatureTest, ConstructorWithPayloadAndOffset) {
   ::std::vector<byte> payload = {2, 3, 4};
   uint32_t offset = 1;
-  Signature signature(payload, offset);
+  RawBytesSignature signature(payload, offset);
   
   Packet matchingPacket{rawPacketFromVector(::std::vector<byte>{1, 2, 3, 4, 5})};
   EXPECT_TRUE(signature.check(matchingPacket));
@@ -83,7 +84,7 @@ TEST(SignatureTest, ConstructorWithPayloadAndOffset) {
 TEST(SignatureTest, CheckWithOffsetBeyondPacketSize) {
   ::std::vector<byte> payload = {1, 2, 3};
   uint32_t offset = 10;
-  Signature signature(payload, offset);
+  RawBytesSignature signature(payload, offset);
   
   
   Packet packet{rawPacketFromVector(::std::vector<byte>{1, 2, 3, 4, 5})};
@@ -106,7 +107,7 @@ TEST(RuleTest, AddSignatureWithValidPointer) {
   Rule rule("TestRule", Event::EventType::Alert);
   
   std::vector<byte> payload = {1, 2, 3, 4, 5};
-  const auto signature = std::make_unique<Signature>(payload);
+  const auto signature = std::make_unique<RawBytesSignature>(payload);
   
   rule.addSignature(signature.get());
   
@@ -131,8 +132,8 @@ TEST(RuleTest, CheckMultipleMatchingSignatures) {
 
   ::std::vector<byte> payload1 = {1, 2, 3};
   ::std::vector<byte> payload2 = {4, 5, 6};
-  Signature sig1(payload1);
-  Signature sig2(payload2);
+  RawBytesSignature sig1(payload1);
+  RawBytesSignature sig2(payload2);
 
   rule.addSignature(&sig1);
   rule.addSignature(&sig2);
@@ -151,9 +152,9 @@ TEST(RuleTest, CheckWithMultipleSignaturesOneNotMatching) {
   ::std::vector<byte> payload2 = {4, 5, 6};
   ::std::vector<byte> payload3 = {7, 8, 9};
 
-  Signature sig1(::std::move(payload1));
-  Signature sig2(::std::move(payload2));
-  Signature sig3(::std::move(payload3));
+  RawBytesSignature sig1(::std::move(payload1));
+  RawBytesSignature sig2(::std::move(payload2));
+  RawBytesSignature sig3(::std::move(payload3));
 
   rule.addSignature(&sig1);
   rule.addSignature(&sig2);

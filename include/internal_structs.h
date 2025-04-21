@@ -182,58 +182,13 @@ struct LogEntry {
 
 class Signature {
 public:
-  Signature(::std::vector<byte> payload) noexcept
-    : payload_(::std::move(payload))
-  {
-    payload_.print();
-  }
+  virtual bool check(const Packet& packet) const noexcept = 0;
 
-  Signature(::std::vector<byte> payload, const uint32_t payload_offset) noexcept
-    : payload_(::std::move(payload))
-    , payload_offset_(payload_offset)
-  {
-    payload_.print();
-  }
+  virtual size_t hash() const noexcept = 0;
 
-  bool check(const Packet& packet) const noexcept {
-    // coutDebug() << "Checking signature ";
-    // payload_.print();
-    // if (packet.signatures.contains(this)) {
-    //   return true;
-    // }
-    const u_char* packetData = packet.packet.getRawData();
-    size_t packetSize = packet.packet.getRawDataLen();
-    
-    // Проверка с учетом смещения
-    if (payload_offset_) {
-      size_t offset = *payload_offset_;
-      size_t payloadSize = payload_->size();
-      if (offset + payloadSize <= packetSize) {
-        return ::std::equal(payload_->begin(), payload_->end(), packetData + offset);
-      }
-      return false;
-    }
+  virtual bool operator==(const Signature& other) const noexcept = 0;
   
-    // Поиск без смещения
-    auto it = ::std::search(packetData, packetData + packetSize, payload_->begin(), payload_->end());
-    bool result = (it != packetData + packetSize);
-    coutDebug() << "Result is: " << result << std::endl;
-    return result;
-  }
-
-  bool operator==(const Signature& other) const noexcept {
-    if (payload_offset_ != other.payload_offset_) {
-      return false;
-    }
-    return payload_ == other.payload_;
-  }
-
-private:
-  template <typename T>
-  friend struct ::std::hash;
-
-  ByteVector payload_;
-  ::std::optional<uint32_t> payload_offset_;
+  virtual ~Signature() noexcept = default;
 };
 
 
@@ -345,8 +300,7 @@ struct hash<::flow_inspector::internal::ByteVector> {
 template<>
 struct hash<::flow_inspector::internal::Signature> {
     size_t operator()(const ::flow_inspector::internal::Signature& obj) const {
-      return hash<::flow_inspector::internal::ByteVector>{}(obj.payload_) ^
-          (hash<optional<uint32_t>>{}(obj.payload_offset_) << 1);
+      return obj.hash();
     }
 };
 

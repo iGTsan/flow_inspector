@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "analyzer.h"
+#include "debug_logger.h"
 
 
 namespace flow_inspector {
@@ -24,6 +25,7 @@ TEST(AnalyzerTest, LoadEmptyRule) {
 
 
 TEST(AnalyzerTest, LoadSingleSignature) {
+  internal::getCoutLevel().enable();
   Logger logger;
   EventsHandler handler{logger};
   Analyzer analyzer{logger, handler};
