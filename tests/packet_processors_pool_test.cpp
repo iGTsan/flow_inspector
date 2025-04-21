@@ -26,7 +26,7 @@ TEST(PacketProcessorsPoolTest, AddPacketToQueue) {
   Logger logger;
   EventsHandler handler{logger};
   Analyzer analyzer{logger, handler};
-  const internal::Packet test_packet{{1, 2, 3, 4}};
+  const internal::Packet test_packet{internal::rawPacketFromVector({1, 2, 3, 4})};
   size_t cnt = 0;
 
   {

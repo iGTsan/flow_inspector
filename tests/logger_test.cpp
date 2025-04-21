@@ -7,7 +7,7 @@ namespace flow_inspector {
 
 TEST(LoggerTest, LogPacketEvent) {
   Logger logger;
-  internal::Packet testPacket{::std::vector<internal::byte>{1, 2, 3, 4}};
+  internal::Packet testPacket{internal::rawPacketFromVector(::std::vector<internal::byte>{1, 2, 3, 4})};
 
   logger.logPacket(testPacket);
 
@@ -49,7 +49,7 @@ TEST(LoggerTest, ExportEmptyLogEntries) {
 
 TEST(LoggerTest, ExportLogsToFile) {
   Logger logger;
-  internal::Packet testPacket{::std::vector<internal::byte>{1, 2, 3, 4}};
+  internal::Packet testPacket{internal::rawPacketFromVector(::std::vector<internal::byte>{1, 2, 3, 4})};
   auto testAlert = internal::Alert{"Test alert message"};
 
   logger.logPacket(testPacket);
@@ -78,7 +78,7 @@ TEST(LoggerTest, HandleLargeNumberOfLogEntries) {
 
   for (int i = 0; i < numEntries; ++i) {
     if (i % 2 == 0) {
-      internal::Packet packet{::std::vector<internal::byte>{1, 2, 3, 4}};
+      internal::Packet packet{internal::rawPacketFromVector(::std::vector<internal::byte>{1, 2, 3, 4})};
       logger.logPacket(packet);
     } else {
       auto alert = internal::Alert{"Test alert message"};
@@ -115,14 +115,16 @@ TEST(LoggerTest, LogRotationWhenMaxEntriesExceeded) {
   logger.setOutputFilename(tempFileName);
 
   for (int i = 0; i <= Logger::DEFAULT_MAX_LOG_ENTRIES; ++i) {
-    internal::Packet packet{::std::vector<internal::byte>{static_cast<internal::byte>(i)}};
+    internal::Packet packet{internal::rawPacketFromVector(
+        ::std::vector<internal::byte>{static_cast<internal::byte>(i)})};
     logger.logPacket(packet);
   }
 
   ::std::this_thread::sleep_for(::std::chrono::milliseconds(10));
 
   for (int i = 0; i < Logger::DEFAULT_MAX_LOG_ENTRIES - 100; ++i) {
-    internal::Packet packet{::std::vector<internal::byte>{static_cast<internal::byte>(i)}};
+    internal::Packet packet{internal::rawPacketFromVector(
+        ::std::vector<internal::byte>{static_cast<internal::byte>(i)})};
     logger.logPacket(packet);
   }
 

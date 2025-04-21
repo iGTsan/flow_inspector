@@ -7,14 +7,14 @@ namespace flow_inspector::internal {
 
 TEST(PacketTest, WithEmptyVector) {
   ::std::vector<byte> emptyData;
-  Packet packet(emptyData);
+  Packet packet(rawPacketFromVector(emptyData));
   
   EXPECT_EQ(packet.toString(), "[]");
 }
 
 TEST(PacketTest, WithNonEmptyVector) {
   ::std::vector<byte> data = {1, 2, 3, 4, 5};
-  Packet packet(data);
+  Packet packet(rawPacketFromVector(data));
   
   EXPECT_EQ(packet.toString(), "[1 2 3 4 5]");
 }
@@ -47,7 +47,7 @@ TEST(SignatureTest, ConstructorWithEmptyPayload) {
   ::std::vector<byte> emptyPayload;
   Signature signature(emptyPayload);
   
-  Packet packet{::std::vector<byte>{1, 2, 3, 4, 5}};
+  Packet packet{rawPacketFromVector(::std::vector<byte>{1, 2, 3, 4, 5})};
   EXPECT_TRUE(signature.check(packet));
 }
 
@@ -56,10 +56,10 @@ TEST(SignatureTest, ConstructorWithNonEmptyPayload) {
   ::std::vector<byte> payload = {1, 2, 3, 4, 5};
   Signature signature(payload);
   
-  Packet matchingPacket{::std::vector<byte>{0, 1, 2, 3, 4, 5, 6}};
+  Packet matchingPacket{rawPacketFromVector(::std::vector<byte>{0, 1, 2, 3, 4, 5, 6})};
   EXPECT_TRUE(signature.check(matchingPacket));
   
-  Packet nonMatchingPacket{::std::vector<byte>{0, 1, 2, 3, 6, 8}};
+  Packet nonMatchingPacket{rawPacketFromVector(::std::vector<byte>{0, 1, 2, 3, 6, 8})};
   EXPECT_FALSE(signature.check(nonMatchingPacket));
 }
 
@@ -69,13 +69,13 @@ TEST(SignatureTest, ConstructorWithPayloadAndOffset) {
   uint32_t offset = 1;
   Signature signature(payload, offset);
   
-  Packet matchingPacket{::std::vector<byte>{1, 2, 3, 4, 5}};
+  Packet matchingPacket{rawPacketFromVector(::std::vector<byte>{1, 2, 3, 4, 5})};
   EXPECT_TRUE(signature.check(matchingPacket));
   
-  Packet nonMatchingPacket{::std::vector<byte>{1, 1, 2, 3, 4, 5}};
+  Packet nonMatchingPacket{rawPacketFromVector(::std::vector<byte>{1, 1, 2, 3, 4, 5})};
   EXPECT_FALSE(signature.check(nonMatchingPacket));
   
-  Packet shortPacket{::std::vector<byte>{1, 2}};
+  Packet shortPacket{rawPacketFromVector(::std::vector<byte>{1, 2})};
   EXPECT_FALSE(signature.check(shortPacket));
 }
 
@@ -86,7 +86,7 @@ TEST(SignatureTest, CheckWithOffsetBeyondPacketSize) {
   Signature signature(payload, offset);
   
   
-  Packet packet{::std::vector<byte>{1, 2, 3, 4, 5}};
+  Packet packet{rawPacketFromVector(::std::vector<byte>{1, 2, 3, 4, 5})};
   EXPECT_FALSE(signature.check(packet));
 }
 
@@ -110,17 +110,17 @@ TEST(RuleTest, AddSignatureWithValidPointer) {
   
   rule.addSignature(signature.get());
   
-  Packet matchingPacket({0, 1, 2, 3, 4, 5, 6});
+  Packet matchingPacket(rawPacketFromVector({0, 1, 2, 3, 4, 5, 6}));
   EXPECT_TRUE(rule.check(matchingPacket));
   
-  Packet nonMatchingPacket({0, 1, 2, 3, 6, 7});
+  Packet nonMatchingPacket(rawPacketFromVector({0, 1, 2, 3, 6, 7}));
   EXPECT_FALSE(rule.check(nonMatchingPacket));
 }
 
 
 TEST(RuleTest, CheckReturnsTrueForEmptySignatures) {
   Rule rule("TestRule", Event::EventType::Alert);
-  Packet packet(::std::vector<byte>{1, 2, 3, 4, 5});
+  Packet packet(rawPacketFromVector(::std::vector<byte>{1, 2, 3, 4, 5}));
 
   EXPECT_TRUE(rule.check(packet));
 }
@@ -138,7 +138,7 @@ TEST(RuleTest, CheckMultipleMatchingSignatures) {
   rule.addSignature(&sig2);
 
   ::std::vector<byte> packetData = {0, 1, 2, 3, 4, 5, 6, 7};
-  Packet packet(packetData);
+  Packet packet(rawPacketFromVector(packetData));
 
   EXPECT_TRUE(rule.check(packet));
 }
@@ -159,8 +159,8 @@ TEST(RuleTest, CheckWithMultipleSignaturesOneNotMatching) {
   rule.addSignature(&sig2);
   rule.addSignature(&sig3);
 
-  Packet matchingPacket(::std::vector<byte>{0, 1, 2, 3, 4, 5, 6, 10, 11});
-  Packet nonMatchingPacket(::std::vector<byte>{0, 1, 2, 3, 4, 5, 6, 10, 11, 12});
+  Packet matchingPacket(rawPacketFromVector(::std::vector<byte>{0, 1, 2, 3, 4, 5, 6, 10, 11}));
+  Packet nonMatchingPacket(rawPacketFromVector(::std::vector<byte>{0, 1, 2, 3, 4, 5, 6, 10, 11, 12}));
 
   EXPECT_FALSE(rule.check(matchingPacket));
   EXPECT_FALSE(rule.check(nonMatchingPacket));

@@ -13,7 +13,8 @@ namespace flow_inspector {
 class IDS {
 public:
   IDS(const uint8_t numPacketProcessors, ::std::unique_ptr<PacketOrigin> origin) noexcept
-    : pool_{analyzer_, numPacketProcessors}
+    : pcap_writer_{origin->getLinkLayerType()}
+    , pool_{analyzer_, numPacketProcessors}
     , origin_{::std::move(origin)}
   {
     origin_->setProcessor([this](auto packet) {

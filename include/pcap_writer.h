@@ -13,8 +13,9 @@ namespace flow_inspector {
 
 class PcapWriter {
 public:
-  PcapWriter()
-    : pcapWriter_(nullptr)
+  PcapWriter(::pcpp::LinkLayerType link_layer_type)
+    : pcapWriter_{nullptr}
+    , link_layer_type_{link_layer_type}
   {}
 
   ~PcapWriter() {
@@ -23,10 +24,8 @@ public:
 
   void setOutputFilename(const ::std::string& filename) noexcept {
     ::std::lock_guard<std::mutex> lock(mutex_);
-    // Если имя файла изменилось, закрываем текущий и открываем новый
     if (filename_ != filename) {
       filename_ = filename;
-      // Если уже был открыт pcap-файл, закрыть и открыть новый
       if (pcapWriter_) {
         closePcap();
         openPcap();
@@ -40,15 +39,7 @@ public:
       openPcap();
     }
 
-    ::pcpp::RawPacket rawPacket(
-      packet.bytes->data(),
-      packet.bytes->size(),
-      packet.header.ts,
-      false,
-      ::pcpp::LinkLayerType::LINKTYPE_DLT_RAW1
-    );
-
-    if (!pcapWriter_->writePacket(rawPacket)) {
+    if (!pcapWriter_->writePacket(packet.packet)) {
       ::std::cerr << "Error writing packet to pcap file\n";
     }
   }
@@ -57,7 +48,7 @@ private:
   bool openPcap() noexcept {
     closePcap();
     
-    pcapWriter_ = new ::pcpp::PcapFileWriterDevice(filename_, ::pcpp::LinkLayerType::LINKTYPE_DLT_RAW1);
+    pcapWriter_ = new ::pcpp::PcapFileWriterDevice(filename_, link_layer_type_);
 
     if (!pcapWriter_->open()) {
       ::std::cerr << "Error opening pcap file: " << filename_ << "\n";
@@ -80,6 +71,7 @@ private:
   ::std::mutex mutex_;
   ::std::string filename_{"default.pcap"};
   ::pcpp::PcapFileWriterDevice* pcapWriter_;
+  ::pcpp::LinkLayerType link_layer_type_;
 };
 
 }  // namespace flow_inspector

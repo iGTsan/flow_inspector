@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -19,6 +20,7 @@
 #include <pcap.h>
 #include "Packet.h"
 
+#include "RawPacket.h"
 #include "debug_logger.h"
 
 #define VERIFY(expression, message) \
@@ -92,64 +94,66 @@ private:
 
 
 inline ByteVector byteVectorFromPCPP(const ::pcpp::RawPacket& packet) {
-  const u_char* rawData = packet.getRawData();
+  const u_char* raw_data = packet.getRawData();
   size_t length = packet.getRawDataLen();
 
-  return ByteVector(::std::vector<byte>(rawData, rawData + length));
+  return ByteVector(::std::vector<byte>(raw_data, raw_data + length));
+}
+
+inline ::pcpp::RawPacket rawPacketFromVector(const ::std::vector<internal::byte>& vec, const timeval& timestamp = {}) {
+  size_t length = vec.size();
+  const u_char* raw_data = vec.data();
+
+  timeval time_stamp_copy = timestamp;
+
+  if (time_stamp_copy.tv_sec == 0 && time_stamp_copy.tv_usec == 0) {
+    gettimeofday(&time_stamp_copy, nullptr);
+  }
+
+  return ::pcpp::RawPacket(raw_data, length, time_stamp_copy, false);
 }
 
 
 struct Packet {
-  Packet(const ByteVector& data) noexcept
-    : bytes{data}
-  {
-    header.len = data->size();
-    header.caplen = data->size();
-  }
+  Packet() noexcept {}
 
-  Packet(const ::std::vector<byte>& data) noexcept
-    : Packet{ByteVector{data}}
+  Packet(::pcpp::RawPacket _packet) noexcept
+      : packet{::std::move(_packet)}
   {}
 
-  Packet(const ::pcpp::RawPacket& packet) noexcept
-    : bytes{byteVectorFromPCPP(packet)}
-  {
-
-    header.len = bytes->size_bytes();
-    header.caplen = bytes->size_bytes();
-  }
-
   bool operator==(const Packet& other) const noexcept {
-    return bytes == other.bytes;
+    return (packet.getRawDataLen() == other.packet.getRawDataLen() &&
+      ::memcmp(packet.getRawData(), other.packet.getRawData(), packet.getRawDataLen()) == 0);
   }
 
   bool operator!=(const Packet& other) const noexcept {
-    return bytes != other.bytes;
+    return !(*this == other);
   }
 
-  ::std::string toString() const noexcept {
-    ::std::stringstream ss;
+  std::string toString() const noexcept {
+    std::stringstream ss;
     ss << "[";
-    for (auto it = bytes->begin(); it != bytes->end(); ++it) {
-      if (it != bytes->begin()) {
+    const u_char* rawData = packet.getRawData();
+    size_t length = packet.getRawDataLen();
+    for (size_t i = 0; i < length; ++i) {
+      if (i != 0) {
         ss << " ";
       }
-      ss << int(*it);
+      ss << int(rawData[i]);
     }
     ss << "]";
     return ss.str();
   }
 
-  ::std::string toShortString() const noexcept {
-    if (bytes->size() < 10) {
+  std::string toShortString() const noexcept {
+    if (packet.getRawDataLen() < 10) {
       return toString();
     }
     return "";
   }
 
-  ByteVector bytes;
-  struct pcap_pkthdr header;
-  ::std::unordered_set<const Signature*> signatures;
+  ::pcpp::RawPacket packet;
+  std::unordered_set<const Signature*> signatures;
 };
 
 
@@ -197,12 +201,22 @@ public:
     // if (packet.signatures.contains(this)) {
     //   return true;
     // }
+    const u_char* packetData = packet.packet.getRawData();
+    size_t packetSize = packet.packet.getRawDataLen();
+    
+    // Проверка с учетом смещения
     if (payload_offset_) {
-      return *payload_offset_ + payload_->size() <= packet.bytes->size() &&
-        ::std::equal(payload_->begin(), payload_->end(), packet.bytes->begin() + *payload_offset_);
+      size_t offset = *payload_offset_;
+      size_t payloadSize = payload_->size();
+      if (offset + payloadSize <= packetSize) {
+        return ::std::equal(payload_->begin(), payload_->end(), packetData + offset);
+      }
+      return false;
     }
-    bool result = ::std::search(packet.bytes->begin(), packet.bytes->end(),
-      payload_->begin(), payload_->end()) != packet.bytes->end();
+  
+    // Поиск без смещения
+    auto it = ::std::search(packetData, packetData + packetSize, payload_->begin(), payload_->end());
+    bool result = (it != packetData + packetSize);
     coutDebug() << "Result is: " << result << std::endl;
     return result;
   }

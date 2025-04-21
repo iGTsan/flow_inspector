@@ -12,7 +12,7 @@ TEST(EventsHandlerTest, CreateEventHandlerWithLogger) {
   internal::Event test_event{
     .type = internal::Event::EventType::Alert,
     .rule = internal::Rule{"TestRule", internal::Event::EventType::Alert},
-    .packet = internal::Packet{{1}},
+    .packet = internal::Packet{internal::rawPacketFromVector({1})},
   };
 
   handler.addEvent(test_event);
@@ -35,7 +35,7 @@ TEST(EventsHandlerTest, AddEventCallbackForAlertEventType) {
   internal::Event test_event{
     .type = internal::Event::EventType::Alert,
     .rule = internal::Rule{"TestRule", internal::Event::EventType::Alert},
-    .packet = internal::Packet({1}),
+    .packet = internal::Packet(internal::rawPacketFromVector({1})),
   };
   events_handler.addEvent(test_event);
 
@@ -57,7 +57,7 @@ TEST(EventsHandlerTest, AddCustomEventCallbackForSpecificEventType) {
   internal::Event test_event{
     .type = internal::Event::EventType::TestEvent,
     .rule = internal::Rule{"TestRule", internal::Event::EventType::TestEvent},
-    .packet = internal::Packet({1, 2, 3, 4}),
+    .packet = internal::Packet(internal::rawPacketFromVector({1, 2, 3, 4})),
   };
   events_handler.addEvent(test_event);
 
@@ -67,7 +67,7 @@ TEST(EventsHandlerTest, AddCustomEventCallbackForSpecificEventType) {
   internal::Event alert_event{
     .type = internal::Event::EventType::Alert,
     .rule = internal::Rule{"TestRule", internal::Event::EventType::Alert},
-    .packet = internal::Packet({1, 2, 3, 4}),
+    .packet = internal::Packet(internal::rawPacketFromVector({1, 2, 3, 4})),
   };
   events_handler.addEvent(alert_event);
 
@@ -93,7 +93,7 @@ TEST(EventsHandlerTest, HandleMultipleCallbacksForSameEventType) {
   internal::Event test_event{
     .type = internal::Event::EventType::Alert,
     .rule = internal::Rule{"TestRule", internal::Event::EventType::Alert},
-    .packet = internal::Packet({1, 2, 3, 4}),
+    .packet = internal::Packet(internal::rawPacketFromVector({1, 2, 3, 4})),
   };
   events_handler.addEvent(test_event);
 
@@ -103,7 +103,7 @@ TEST(EventsHandlerTest, HandleMultipleCallbacksForSameEventType) {
 TEST(EventsHandlerTest, PassEventObjectToCallback) {
   Logger logger;
   EventsHandler events_handler{logger};
-  internal::Packet test_packet{{1, 2, 3, 4}};
+  internal::Packet test_packet{internal::rawPacketFromVector({1, 2, 3, 4})};
 
   EventsHandler::EventCallback test_callback = [&test_packet](const internal::Event& event) {
     EXPECT_EQ(event.type, internal::Event::EventType::TestEvent);

@@ -58,10 +58,25 @@ public:
     }
   }
 
+  ::pcpp::LinkLayerType getLinkLayerType() noexcept override {
+    device_ = ::pcpp::PcapLiveDeviceList::getInstance().getPcapLiveDeviceByName(interface_name_);
+    if (device_ == nullptr) {
+      ::std::cerr << "Couldn't find device " << interface_name_ << ::std::endl;
+      return ::pcpp::LinkLayerType::LINKTYPE_DLT_RAW1;
+    }
+    
+    if (!device_->open()) {
+      ::std::cerr << "Couldn't open device " << interface_name_ << ::std::endl;
+      return ::pcpp::LinkLayerType::LINKTYPE_DLT_RAW1;
+    }
+
+    return device_->getLinkType();
+  }
+
 private:
-  static void onPacketArrives(::pcpp::RawPacket* rawPacket, ::pcpp::PcapLiveDevice* /*dev*/, void* userData) {
-    auto* capturer = reinterpret_cast<TrafficCapturer*>(userData);
-    capturer->processPacket(*rawPacket);
+  static void onPacketArrives(::pcpp::RawPacket* raw_packet, ::pcpp::PcapLiveDevice* /*dev*/, void* user_data) {
+    auto* capturer = reinterpret_cast<TrafficCapturer*>(user_data);
+    capturer->processPacket(*raw_packet);
   }
 
   ::std::string interface_name_;

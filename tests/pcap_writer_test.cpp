@@ -2,20 +2,17 @@
 #include "pcap_writer.h"
 #include "pcap_reader.h"
 
+#include "RawPacket.h"
+
 
 namespace flow_inspector {
 
 
 TEST(PcapWriterTest, SavePacket) {
-  internal::Packet testPacket{::std::vector<internal::byte>(10, 0xAA)};
+  internal::Packet testPacket{internal::rawPacketFromVector(::std::vector<internal::byte>(10, 0xAA))};
   {
-    PcapWriter writer;
+    PcapWriter writer{::pcpp::LinkLayerType::LINKTYPE_ETHERNET};
     writer.setOutputFilename("test_output.pcap");
-
-    testPacket.header.ts.tv_sec = 1234567890;
-    testPacket.header.ts.tv_usec = 123456;
-    testPacket.header.caplen = 10;
-    testPacket.header.len = 10;
 
     writer.savePacket(testPacket);
   }
@@ -30,11 +27,7 @@ TEST(PcapWriterTest, SavePacket) {
   int result = pcap_next_ex(handle, &header, &packet);
   ASSERT_EQ(result, 1) << "Failed to read packet from pcap file";
 
-  EXPECT_EQ(header->ts.tv_sec, testPacket.header.ts.tv_sec);
-  EXPECT_EQ(header->ts.tv_usec, testPacket.header.ts.tv_usec);
-  EXPECT_EQ(header->caplen, testPacket.header.caplen);
-  EXPECT_EQ(header->len, testPacket.header.len);
-  EXPECT_EQ(memcmp(packet, testPacket.bytes->data(), testPacket.header.caplen), 0);
+  EXPECT_EQ(memcmp(packet, testPacket.packet.getRawData(), testPacket.packet.getRawDataLen()), 0);
 
   pcap_close(handle);
   std::remove("test_output.pcap");
@@ -42,7 +35,7 @@ TEST(PcapWriterTest, SavePacket) {
 
 
 TEST(PcapWriterReaderTest, SaveAndReadPacket) {
-  internal::Packet testPacket{::std::vector<internal::byte>{
+  internal::Packet testPacket{internal::rawPacketFromVector(::std::vector<internal::byte>{
       0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, // Ethernet destination
       0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, // Ethernet source
       0x08, 0x00,                         // IP protocol type
@@ -51,13 +44,10 @@ TEST(PcapWriterReaderTest, SaveAndReadPacket) {
       0xA6, 0xEC,                         // Header checksum
       192, 168, 1, 1,                     // Source IP
       192, 168, 1, 2                      // Destination IP
-  }};
-
-  testPacket.header.caplen = testPacket.bytes->size();
-  testPacket.header.len = testPacket.bytes->size();
+  })};
 
   {
-    PcapWriter writer;
+    PcapWriter writer{::pcpp::LinkLayerType::LINKTYPE_ETHERNET};
     writer.setOutputFilename("test_output.pcap");
     writer.savePacket(testPacket);
   }
@@ -76,9 +66,7 @@ TEST(PcapWriterReaderTest, SaveAndReadPacket) {
   ASSERT_EQ(capturedPackets.size(), 1);
 
   const auto& readPacket = capturedPackets[0];
-  EXPECT_EQ(readPacket.header.caplen, testPacket.header.caplen);
-  EXPECT_EQ(readPacket.header.len, testPacket.header.len);
-  EXPECT_EQ(::memcmp(readPacket.bytes->data(), testPacket.bytes->data(), testPacket.header.caplen), 0);
+  EXPECT_EQ(readPacket, testPacket);
 
   ::std::remove("test_output.pcap");
 }

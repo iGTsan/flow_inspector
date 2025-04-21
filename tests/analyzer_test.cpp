@@ -28,8 +28,8 @@ TEST(AnalyzerTest, LoadSingleSignature) {
   EventsHandler handler{logger};
   Analyzer analyzer{logger, handler};
 
-  internal::Packet matched_packet{{0, 1, 2, 3, 4, 5, 6}};
-  internal::Packet non_matched_packet{{0, 1, 2, 4, 5, 6}};
+  internal::Packet matched_packet{internal::rawPacketFromVector({0, 1, 2, 3, 4, 5, 6})};
+  internal::Packet non_matched_packet{internal::rawPacketFromVector({0, 1, 2, 4, 5, 6})};
 
   // Alert; 1_sig; ([1 2 3 4])
   EXPECT_TRUE(loadFile(analyzer, "1_sig.rule"));
@@ -52,8 +52,8 @@ TEST(AnalyzerTest, LoadDoubleSignature) {
   EventsHandler handler{logger};
   Analyzer analyzer{logger, handler};
 
-  internal::Packet matched_packet{{0, 1, 2, 3, 4, 1, 2, 3, 7}};
-  internal::Packet non_matched_packet{{0, 1, 2, 4, 5, 6}};
+  internal::Packet matched_packet{internal::rawPacketFromVector({0, 1, 2, 3, 4, 1, 2, 3, 7})};
+  internal::Packet non_matched_packet{internal::rawPacketFromVector({0, 1, 2, 4, 5, 6})};
 
   // Alert; 2_sig; ([1 2 3 4]); ([1 2 3 7])
   EXPECT_TRUE(loadFile(analyzer, "2_sig.rule"));
@@ -76,8 +76,8 @@ TEST(AnalyzerTest, LoadSignatureWithOffset) {
   EventsHandler handler{logger};
   Analyzer analyzer{logger, handler};
 
-  internal::Packet matched_packet{{0, 1, 2, 3, 4, 1, 2, 3, 7}};
-  internal::Packet non_matched_packet{{1, 2, 3, 4, 5, 6}};
+  internal::Packet matched_packet{internal::rawPacketFromVector({0, 1, 2, 3, 4, 1, 2, 3, 7})};
+  internal::Packet non_matched_packet{internal::rawPacketFromVector({1, 2, 3, 4, 5, 6})};
 
   // Alert; 1_sig; ([1 2 3 4], 1)
   EXPECT_TRUE(loadFile(analyzer, "1_sig_with_offset.rule"));
@@ -100,9 +100,9 @@ TEST(AnalyzerTest, LoadTwoRules) {
   EventsHandler handler{logger};
   Analyzer analyzer{logger, handler};
 
-  internal::Packet first_rule_packet{{0, 2, 3, 4, 5, 6}};
-  internal::Packet second_rule_packet{{1, 2, 3, 4, 6}};
-  internal::Packet both_rule_packet{{1, 2, 3, 4, 5, 6}};
+  internal::Packet first_rule_packet{internal::rawPacketFromVector({0, 2, 3, 4, 5, 6})};
+  internal::Packet second_rule_packet{internal::rawPacketFromVector({1, 2, 3, 4, 6})};
+  internal::Packet both_rule_packet{internal::rawPacketFromVector({1, 2, 3, 4, 5, 6})};
 
   // TestEvent1; rule_1; ([3 4]); ([5 6])
   // TestEvent2; rule_2; ([1 2]); ([3 4])
@@ -139,7 +139,7 @@ TEST(AnalyzerTest, LoadTwoRulesWithSameSignature) {
   EventsHandler handler{logger};
   Analyzer analyzer{logger, handler};
 
-  internal::Packet both_rule_packet{{0, 1, 2, 3, 4, 5, 6}};
+  internal::Packet both_rule_packet{internal::rawPacketFromVector({0, 1, 2, 3, 4, 5, 6})};
 
   // TestEvent1; rule_1; ([1 2], 1)
   // TestEvent2; rule_2; ([1 2], 1)

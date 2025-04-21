@@ -22,20 +22,13 @@ public:
     packet_processor_ = ::std::move(processor);
   }
 
-  void processPacket(const struct pcap_pkthdr *pkthdr, const u_char *packet) {
-    ::std::vector<internal::byte> payload{
-        reinterpret_cast<const internal::byte*>(packet), 
-        reinterpret_cast<const internal::byte*>(packet) + pkthdr->caplen};
-    packet_processor_(internal::Packet{
-      ::std::move(payload),
-    });
-  }
-
   void processPacket(const ::pcpp::RawPacket& packet) {
     packet_processor_(internal::Packet{packet});
   }
 
   virtual void startReading() noexcept = 0;
+
+  virtual ::pcpp::LinkLayerType getLinkLayerType() noexcept = 0;
 
   void stopReading() noexcept {
     internal::coutDebug() << "Stopping reading" << std::endl;

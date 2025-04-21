@@ -9,6 +9,7 @@ FetchContent_MakeAvailable(googletest)
 
 set(PCAP_FILES_DIR "${CMAKE_SOURCE_DIR}/tests/pcap_files")
 set(PCAP_FILES
+    "a_lot_of.pcap"
     "double_packets.pcap"
     "empty.pcap"
     "http.pcap"
@@ -28,6 +29,7 @@ set(RULE_FILES
     "bad.rule"
     "double_packets_one_hit.rule"
     "empty.rule"
+    "pcap_all.rule"
 )
 foreach(file ${RULE_FILES})
     configure_file(${RULE_FILES_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)

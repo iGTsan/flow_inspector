@@ -5,6 +5,7 @@
 #include <memory>
 #include <iostream>
 
+#include "RawPacket.h"
 #include "events_handler.h"
 #include "logger.h"
 #include "packet_origin.h"
@@ -41,6 +42,17 @@ class PcapReader: public PacketOrigin {
   }
 
   void internalStopReading() noexcept override {}
+
+  ::pcpp::LinkLayerType getLinkLayerType() noexcept override {
+    ::pcpp::PcapFileReaderDevice reader{input_file_};
+    if (!reader.open()) {
+      ::std::filesystem::path current_path = ::std::filesystem::current_path();
+      ::std::cerr << "Error opening pcap file: " << input_file_ << ::std::endl;
+      ::std::cerr << "Current directory is " << current_path << ::std::endl;
+      return ::pcpp::LinkLayerType::LINKTYPE_DLT_RAW1;
+    }
+    return reader.getLinkLayerType();
+  }
 
  private:
     ::std::string input_file_;
