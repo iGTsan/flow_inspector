@@ -3,26 +3,11 @@
 #include <thread>
 #include <unordered_set>
 
+#include "ip_signature.h"
 #include "logger.h"
 #include "events_handler.h"
 #include "internal_structs.h"
 #include "raw_bytes_signature.h"
-
-namespace {
-::std::string trim(const ::std::string& str) {
-  auto start = str.begin();
-  while (start != str.end() && ::std::isspace(*start)) {
-      start++;
-  }
-
-  auto end = str.end();
-  do {
-      end--;
-  } while (::std::distance(start, end) > 0 && ::std::isspace(*end));
-
-  return ::std::string(start, end + 1);
-}
-}  // namespace
 
 
 namespace flow_inspector {
@@ -36,6 +21,8 @@ public:
   {
     internal::SignatureFactory::instance().registerSignatureType(
         "raw_bytes", internal::RawBytesSignature::createRawBytesSignature);
+    internal::SignatureFactory::instance().registerSignatureType(
+        "ip", internal::IPSignature::createIPSignature);
   }
 
   void detectThreats(const internal::Packet& packet) {

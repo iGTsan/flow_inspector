@@ -18,6 +18,7 @@
 #include <unordered_set>
 
 #include <pcap.h>
+#include "IpAddress.h"
 #include "Packet.h"
 
 #include "RawPacket.h"
@@ -31,6 +32,21 @@
       ::std::abort(); \
     } \
   } while (false)
+
+
+inline ::std::string trim(const ::std::string& str) {
+  auto start = str.begin();
+  while (start != str.end() && ::std::isspace(*start)) {
+      start++;
+  }
+
+  auto end = str.end();
+  do {
+      end--;
+  } while (::std::distance(start, end) > 0 && ::std::isspace(*end));
+
+  return ::std::string(start, end + 1);
+}
 
 
 namespace flow_inspector::internal {
@@ -119,6 +135,7 @@ struct Packet {
 
   Packet(::pcpp::RawPacket _packet) noexcept
       : packet{::std::move(_packet)}
+      , parsed_packet{&packet}
   {}
 
   bool operator==(const Packet& other) const noexcept {
@@ -153,6 +170,7 @@ struct Packet {
   }
 
   ::pcpp::RawPacket packet;
+  ::pcpp::Packet parsed_packet;
   std::unordered_set<const Signature*> signatures;
 };
 
@@ -313,6 +331,13 @@ struct hash<::flow_inspector::internal::Rule> {
       hashsum ^= hash<::flow_inspector::internal::Signature>{}(*s);
     }
     return hashsum;
+  }
+};
+
+template <>
+struct hash<pcpp::IPv4Address> {
+  size_t operator()(const pcpp::IPv4Address& ip) const noexcept {
+    return std::hash<uint32_t>{}(ip.toInt());
   }
 };
 
