@@ -6,6 +6,8 @@ COMPILER=clang++
 
 mkdir -p build
 cd build
-cmake .. -DCMAKE_CXX_COMPILER="$COMPILER"
+rm CMakeCache.txt
+cmake .. -DCMAKE_CXX_COMPILER="$COMPILER" -DCMAKE_BUILD_TYPE=Release
+# cmake .. -DCMAKE_CXX_COMPILER="$COMPILER" -DCMAKE_BUILD_TYPE=Debug
 cmake --build . -- -j$(nproc)
 cp FlowInspector ../

@@ -30,8 +30,8 @@ TestPacket createTestPacket(const ::std::string& srcIp, const ::std::string& dst
 }
 
 TEST(IPSignatureTest, SingleIPMatch) {
-  ::std::unordered_set<::std::pair<uint32_t, int>> srcIps = {{ipToUInt("192.168.1.1"), 32}};
-  ::std::unordered_set<::std::pair<uint32_t, int>> dstIps = {{ipToUInt("10.0.0.1"), 32}};
+  ::std::unordered_set<::std::pair<uint32_t, uint32_t>> srcIps = {{ipToUInt("192.168.1.1"), getMaskByLen(32)}};
+  ::std::unordered_set<::std::pair<uint32_t, uint32_t>> dstIps = {{ipToUInt("10.0.0.1"), getMaskByLen(32)}};
   
   IPSignature signature(srcIps, dstIps);
   auto testPacket = createTestPacket("192.168.1.1", "10.0.0.1");
@@ -40,8 +40,8 @@ TEST(IPSignatureTest, SingleIPMatch) {
 }
 
 TEST(IPSignatureTest, NoIPMatch) {
-  ::std::unordered_set<::std::pair<uint32_t, int>> srcIps = {{ipToUInt("192.168.1.1"), 32}};
-  ::std::unordered_set<::std::pair<uint32_t, int>> dstIps = {{ipToUInt("10.0.0.1"), 32}};
+  ::std::unordered_set<::std::pair<uint32_t, uint32_t>> srcIps = {{ipToUInt("192.168.1.1"), getMaskByLen(32)}};
+  ::std::unordered_set<::std::pair<uint32_t, uint32_t>> dstIps = {{ipToUInt("10.0.0.1"), getMaskByLen(32)}};
   
   IPSignature signature(srcIps, dstIps);
   auto testPacket = createTestPacket("192.168.1.2", "10.0.0.2");
@@ -50,18 +50,18 @@ TEST(IPSignatureTest, NoIPMatch) {
 }
 
 TEST(IPSignatureTest, SingleMatchWithEmptyDestinationSet) {
-  ::std::unordered_set<::std::pair<uint32_t, int>> srcIps = {{ipToUInt("192.168.1.1"), 32}};
+  ::std::unordered_set<::std::pair<uint32_t, uint32_t>> srcIps = {{ipToUInt("192.168.1.1"), getMaskByLen(32)}};
 
-  IPSignature signature(srcIps, ::std::unordered_set<::std::pair<uint32_t, int>>{});
+  IPSignature signature(srcIps, ::std::unordered_set<::std::pair<uint32_t, uint32_t>>{});
   auto testPacket = createTestPacket("192.168.1.1", "10.0.0.1");
 
   EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
 }
 
 TEST(IPSignatureTest, SingleMatchWithEmptySourceSet) {
-  ::std::unordered_set<::std::pair<uint32_t, int>> dstIps = {{ipToUInt("10.0.0.1"), 32}};
+  ::std::unordered_set<::std::pair<uint32_t, uint32_t>> dstIps = {{ipToUInt("10.0.0.1"), getMaskByLen(32)}};
 
-  IPSignature signature(::std::unordered_set<::std::pair<uint32_t, int>>{}, dstIps);
+  IPSignature signature(::std::unordered_set<::std::pair<uint32_t, uint32_t>>{}, dstIps);
   auto testPacket = createTestPacket("192.168.1.2", "10.0.0.1");
 
   EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
@@ -93,8 +93,8 @@ TEST(IPSignatureTest, SingleIPMatchFromSet) {
 }
 
 TEST(IPSignatureTest, CIDRMatch) {
-  ::std::unordered_set<::std::pair<uint32_t, int>> srcIps = {{ipToUInt("192.168.1.0"), 24}};
-  ::std::unordered_set<::std::pair<uint32_t, int>> dstIps = {{ipToUInt("10.0.0.0"), 24}};
+  ::std::unordered_set<::std::pair<uint32_t, uint32_t>> srcIps = {{ipToUInt("192.168.1.0"), getMaskByLen(24)}};
+  ::std::unordered_set<::std::pair<uint32_t, uint32_t>> dstIps = {{ipToUInt("10.0.0.0"), getMaskByLen(24)}};
 
   IPSignature signature(srcIps, dstIps);
 

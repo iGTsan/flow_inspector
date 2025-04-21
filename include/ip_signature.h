@@ -26,6 +26,10 @@ inline uint32_t getNetworkAddress(uint32_t ip, int maskLength) {
     return ip & mask;
 }
 
+inline uint32_t getMaskByLen(int maskLength) {
+    return (~0u) << (32 - maskLength);
+}
+
 inline uint32_t ipToUInt(const ::std::string& ipStr) {
     ::pcpp::IPv4Address ip(ipStr);
     return swapOctets(ip.toInt());
@@ -56,9 +60,10 @@ inline bool safeStringToInt(const ::std::string& str, int& result) {
 
 class IPSignature: public Signature {
  public:
-  IPSignature(const ::std::unordered_set<::std::pair<uint32_t, int>>& srcIpMasks,
-      const ::std::unordered_set<::std::pair<uint32_t, int>>& dstIpMasks)
-    : src_ip_masks_(srcIpMasks), dst_ip_masks_(dstIpMasks) {}
+  IPSignature(const ::std::unordered_set<::std::pair<uint32_t, uint32_t>>& srcIpMasks,
+      const ::std::unordered_set<::std::pair<uint32_t, uint32_t>>& dstIpMasks)
+    : src_ip_masks_(srcIpMasks.begin(), srcIpMasks.end())
+    , dst_ip_masks_(dstIpMasks.begin(), dstIpMasks.end()) {}
 
   bool check(const Packet& packet) const noexcept override {
     const auto& pcpp_packet = packet.parsed_packet;
@@ -96,8 +101,8 @@ class IPSignature: public Signature {
   }
 
   static ::std::unique_ptr<Signature> createIPSignature(const ::std::string& initString) {
-    ::std::unordered_set<::std::pair<uint32_t, int>> src_ip_masks;
-    ::std::unordered_set<::std::pair<uint32_t, int>> dst_ip_masks;
+    ::std::unordered_set<::std::pair<uint32_t, uint32_t>> src_ip_masks;
+    ::std::unordered_set<::std::pair<uint32_t, uint32_t>> dst_ip_masks;
   
     ::std::istringstream stream(initString);
     ::std::string srcSegment, dstSegment, tmp;
@@ -129,7 +134,7 @@ class IPSignature: public Signature {
         ipPart = srcIpStr;
       }
   
-      src_ip_masks.insert({ipToUInt(ipPart), mask});
+      src_ip_masks.insert({ipToUInt(ipPart), getMaskByLen(mask)});
     }
     
     ::std::string dstIpStr;
@@ -151,24 +156,24 @@ class IPSignature: public Signature {
         ipPart = dstIpStr;
       }
   
-      dst_ip_masks.insert({ipToUInt(ipPart), mask});
+      dst_ip_masks.insert({ipToUInt(ipPart), getMaskByLen(mask)});
     }
 
     return ::std::make_unique<IPSignature>(src_ip_masks, dst_ip_masks);
   }
 
 private:
-  bool matchIPWithMasks(uint32_t ip, const ::std::unordered_set<::std::pair<uint32_t, int>>& ipMasks) const {
+  bool matchIPWithMasks(uint32_t ip, const ::std::vector<::std::pair<uint32_t, uint32_t>>& ipMasks) const {
     for (const auto& [networkIp, mask] : ipMasks) {
-      if (getNetworkAddress(ip, mask) == networkIp) {
+      if ((ip & mask) == networkIp) {
         return true;
       }
     }
     return false;
   }
 
-  ::std::unordered_set<::std::pair<uint32_t, int>> src_ip_masks_;
-  ::std::unordered_set<::std::pair<uint32_t, int>> dst_ip_masks_;
+  ::std::vector<::std::pair<uint32_t, uint32_t>> src_ip_masks_;
+  ::std::vector<::std::pair<uint32_t, uint32_t>> dst_ip_masks_;
 };
 
 } // namespace flow_inspector::internal
