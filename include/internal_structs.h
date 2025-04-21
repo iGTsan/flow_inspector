@@ -341,6 +341,15 @@ struct hash<pcpp::IPv4Address> {
   }
 };
 
+template <>
+struct hash<std::pair<uint32_t, int>> {
+  size_t operator()(const std::pair<uint32_t, int>& pair) const {
+    size_t hash1 = std::hash<uint32_t>{}(pair.first);
+    size_t hash2 = std::hash<int>{}(pair.second);
+    return hash1 ^ (hash2 << 1);
+  }
+};
+
 
 }  // namespace std
 

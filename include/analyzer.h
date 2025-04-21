@@ -112,7 +112,6 @@ private:
       result.addSignature(sig);
     }
 
-    // Заглушка для Rule и логики загрузки правила
     loadRule(::std::move(result));
     return true;
   }

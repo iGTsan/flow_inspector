@@ -16,10 +16,10 @@ struct TestPacket {
   ::pcpp::Packet packet{100};
 };
 
-TestPacket createTestPacket(const std::string& srcIp, const std::string& dstIp) {
-  TestPacket test_packet {
+TestPacket createTestPacket(const ::std::string& srcIp, const ::std::string& dstIp) {
+  TestPacket test_packet{
     ::pcpp::EthLayer(pcpp::MacAddress("aa:bb:cc:dd:ee:ff"), ::pcpp::MacAddress("ff:ee:dd:cc:bb:aa")),
-    ::pcpp::IPv4Layer(pcpp::IPv4Address(srcIp), ::pcpp::IPv4Address(dstIp)),
+    ::pcpp::IPv4Layer(pcpp::IPv4Address(srcIp), ::pcpp::IPv4Address(dstIp))
   };
 
   test_packet.packet.addLayer(&test_packet.eth_layer);
@@ -30,8 +30,8 @@ TestPacket createTestPacket(const std::string& srcIp, const std::string& dstIp) 
 }
 
 TEST(IPSignatureTest, SingleIPMatch) {
-  ::std::unordered_set<::pcpp::IPv4Address> srcIps = {::pcpp::IPv4Address("192.168.1.1")};
-  ::std::unordered_set<::pcpp::IPv4Address> dstIps = {::pcpp::IPv4Address("10.0.0.1")};
+  ::std::unordered_set<::std::pair<uint32_t, int>> srcIps = {{ipToUInt("192.168.1.1"), 32}};
+  ::std::unordered_set<::std::pair<uint32_t, int>> dstIps = {{ipToUInt("10.0.0.1"), 32}};
   
   IPSignature signature(srcIps, dstIps);
   auto testPacket = createTestPacket("192.168.1.1", "10.0.0.1");
@@ -40,8 +40,8 @@ TEST(IPSignatureTest, SingleIPMatch) {
 }
 
 TEST(IPSignatureTest, NoIPMatch) {
-  ::std::unordered_set<::pcpp::IPv4Address> srcIps = {::pcpp::IPv4Address("192.168.1.1")};
-  ::std::unordered_set<::pcpp::IPv4Address> dstIps = {::pcpp::IPv4Address("10.0.0.1")};
+  ::std::unordered_set<::std::pair<uint32_t, int>> srcIps = {{ipToUInt("192.168.1.1"), 32}};
+  ::std::unordered_set<::std::pair<uint32_t, int>> dstIps = {{ipToUInt("10.0.0.1"), 32}};
   
   IPSignature signature(srcIps, dstIps);
   auto testPacket = createTestPacket("192.168.1.2", "10.0.0.2");
@@ -50,18 +50,18 @@ TEST(IPSignatureTest, NoIPMatch) {
 }
 
 TEST(IPSignatureTest, SingleMatchWithEmptyDestinationSet) {
-  ::std::unordered_set<::pcpp::IPv4Address> srcIps = {::pcpp::IPv4Address("192.168.1.1")};
+  ::std::unordered_set<::std::pair<uint32_t, int>> srcIps = {{ipToUInt("192.168.1.1"), 32}};
 
-  IPSignature signature(srcIps, ::std::unordered_set<::pcpp::IPv4Address>{});
+  IPSignature signature(srcIps, ::std::unordered_set<::std::pair<uint32_t, int>>{});
   auto testPacket = createTestPacket("192.168.1.1", "10.0.0.1");
 
   EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
 }
 
 TEST(IPSignatureTest, SingleMatchWithEmptySourceSet) {
-  ::std::unordered_set<::pcpp::IPv4Address> dstIps = {::pcpp::IPv4Address("10.0.0.1")};
+  ::std::unordered_set<::std::pair<uint32_t, int>> dstIps = {{ipToUInt("10.0.0.1"), 32}};
 
-  IPSignature signature(::std::unordered_set<::pcpp::IPv4Address>{}, dstIps);
+  IPSignature signature(::std::unordered_set<::std::pair<uint32_t, int>>{}, dstIps);
   auto testPacket = createTestPacket("192.168.1.2", "10.0.0.1");
 
   EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
@@ -70,13 +70,9 @@ TEST(IPSignatureTest, SingleMatchWithEmptySourceSet) {
 TEST(IPSignatureTest, SingleIPMatchFromSet) {
   const ::std::string srcIp1 = "192.168.1.1";
   const ::std::string srcIp2 = "192.168.1.4";
-  const ::std::string srcIp3 = "192.168.1.6";
-  const ::std::string srcIp4 = "192.168.1.10";
   const ::std::string dstIp1 = "10.0.0.1";
   const ::std::string dstIp2 = "10.0.0.2";
-  const ::std::string dstIp3 = "10.0.0.3";
-  const ::std::string dstIp4 = "10.0.0.4";
-  ::std::string sigStr = "([" + srcIp1 + ", " + srcIp2 +"], [" + dstIp1 + ", " + dstIp2 + "]";
+  ::std::string sigStr = "([" + srcIp1 + "/32, " + srcIp2 + "/32], [" + dstIp1 + "/32, " + dstIp2 + "/32])";
 
   auto signature = IPSignature::createIPSignature(sigStr);
 
@@ -96,5 +92,21 @@ TEST(IPSignatureTest, SingleIPMatchFromSet) {
   }
 }
 
+TEST(IPSignatureTest, CIDRMatch) {
+  ::std::unordered_set<::std::pair<uint32_t, int>> srcIps = {{ipToUInt("192.168.1.0"), 24}};
+  ::std::unordered_set<::std::pair<uint32_t, int>> dstIps = {{ipToUInt("10.0.0.0"), 24}};
+
+  IPSignature signature(srcIps, dstIps);
+
+  {
+    auto testPacket = createTestPacket("192.168.1.5", "10.0.0.10");
+    EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
+  }
+
+  {
+    auto testPacket = createTestPacket("192.168.2.5", "10.0.1.10");
+    EXPECT_FALSE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
+  }
+}
 
 }  // namespace flow_inspector::internal
