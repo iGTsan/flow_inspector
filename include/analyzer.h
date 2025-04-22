@@ -4,6 +4,8 @@
 #include <unordered_set>
 
 #include "ip_signature.h"
+#include "tcp_signature.h"
+#include "content_signature.h"
 #include "logger.h"
 #include "events_handler.h"
 #include "internal_structs.h"
@@ -23,6 +25,10 @@ public:
         "raw_bytes", internal::RawBytesSignature::createRawBytesSignature);
     internal::SignatureFactory::instance().registerSignatureType(
         "ip", internal::IPSignature::createIPSignature);
+    internal::SignatureFactory::instance().registerSignatureType(
+        "tcp", internal::TCPSignature::createTCPSignature);
+    internal::SignatureFactory::instance().registerSignatureType(
+        "content", internal::ContentSignature::createContentSignature);
   }
 
   void detectThreats(const internal::Packet& packet) {
@@ -90,6 +96,10 @@ private:
     ::std::string signature;
     internal::Rule result(name, internal::Event::stringToEventType(event_str));
     while (::std::getline(stream, signature, ';')) {
+      signature = trim(signature);
+      if (signature.empty()) {
+        continue;
+      }
       size_t open_bracket = signature.find('(');
       size_t close_bracket = signature.find(')', open_bracket);
       if (open_bracket == ::std::string::npos || close_bracket == ::std::string::npos) {

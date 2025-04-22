@@ -52,12 +52,6 @@ inline ::std::string adressToString(uint32_t ip, int maskLength) {
   return ss.str();
 }
 
-inline bool safeStringToInt(const ::std::string& str, int& result) {
-  ::std::istringstream iss(str);
-  iss >> result;
-  return !iss.fail() && iss.eof();
-}
-
 class IPSignature: public Signature {
  public:
   IPSignature(const ::std::unordered_set<::std::pair<uint32_t, uint32_t>>& srcIpMasks,
@@ -121,6 +115,9 @@ class IPSignature: public Signature {
       if (srcIpStr == "$HOME_NET") {
         srcIpStr = HOME_NET_ADDR;
       }
+      if (srcIpStr == "any") {
+        continue;
+      }
       auto pos = srcIpStr.find('/');
   
       ::std::string ipPart;
@@ -142,6 +139,9 @@ class IPSignature: public Signature {
       dstIpStr = trim(dstIpStr);
       if (dstIpStr == "$HOME_NET") {
         dstIpStr = HOME_NET_ADDR;
+      }
+      if (dstIpStr == "any") {
+        continue;
       }
       auto pos = dstIpStr.find('/');
   

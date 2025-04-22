@@ -45,6 +45,8 @@ add_executable(runTests
     packet_processors_pool_test.cpp
     ids_test.cpp
     ip_signature_test.cpp
+    content_signature_test.cpp
+    tcp_signature_test.cpp
     pcap_writer_test.cpp
 )
 

@@ -118,9 +118,7 @@ public:
     }
     
     if (file.is_open()) {
-      ::std::cout << "Start export to " << output_filename_ << ::std::endl;
       file << exportLogs();
-      ::std::cout << "End export to " << output_filename_ << ::std::endl;
       file.close();
     } else {
       ::std::cerr << "Error opening file: " << output_filename_ << "\n";

@@ -295,14 +295,16 @@ public:
   }
 
   void addSignature(const Signature* signature) noexcept {
-    signatures_.insert(signature);
+    signatures_.push_back(signature);
   }
 
   bool check(const Packet& packet) const noexcept {
-    auto result = signatures_.empty() ||
-      ::std::all_of(signatures_.begin(), signatures_.end(),
-        [&packet](const Signature* signature) { return signature->check(packet); });
-    return result;
+    for (const auto& sig: signatures_) {
+      if (!sig->check(packet)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   bool operator==(const Rule& other) const noexcept {
@@ -317,7 +319,7 @@ private:
   friend struct ::std::hash;
 
   const ::std::string name_;
-  ::std::unordered_set<const Signature*> signatures_;
+  ::std::vector<const Signature*> signatures_;
   const Event::EventType type_;
 };
 
@@ -328,6 +330,13 @@ public:
 
   virtual const Packet* nextLayer() noexcept = 0;
 };
+
+
+inline bool safeStringToInt(const ::std::string& str, int& result) {
+  ::std::istringstream iss(str);
+  iss >> result;
+  return !iss.fail() && iss.eof();
+}
 
 
 }  // namespace flow_inspector::internal
