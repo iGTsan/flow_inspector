@@ -44,8 +44,8 @@ class RawBytesSignature: public Signature {
     // if (packet.signatures.contains(this)) {
     //   return true;
     // }
-    const u_char* packetData = packet.packet.getRawData();
-    size_t packetSize = packet.packet.getRawDataLen();
+    const u_char* packetData = packet.packet->getRawData();
+    size_t packetSize = packet.packet->getRawDataLen();
     
     // Проверка с учетом смещения
     if (payload_offset_) {

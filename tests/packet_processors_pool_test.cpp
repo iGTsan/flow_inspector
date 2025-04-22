@@ -26,7 +26,7 @@ TEST(PacketProcessorsPoolTest, AddPacketToQueue) {
   Logger logger;
   EventsHandler handler{logger};
   Analyzer analyzer{logger, handler};
-  const internal::Packet test_packet{internal::rawPacketFromVector({1, 2, 3, 4})};
+  internal::Packet test_packet{internal::rawPacketFromVector({1, 2, 3, 4})};
   size_t cnt = 0;
 
   {
@@ -37,7 +37,7 @@ TEST(PacketProcessorsPoolTest, AddPacketToQueue) {
     };
     pool.addCallback(callback);
 
-    pool.addPacket(test_packet);
+    pool.addPacket(test_packet.copy());
   }
 
   EXPECT_EQ(cnt, 1);
@@ -60,7 +60,7 @@ TEST(PacketProcessorsPoolTest, ProcessLargeNumberOfPacketSingleThread) {
 
     PcapReader reader;
     reader.setProcessor([&](const internal::Packet& packet) {
-      pool.addPacket(packet);
+      pool.addPacket(packet.copy());
     });
     reader.setFilename("http.pcap");
     reader.startReading();
@@ -86,7 +86,7 @@ TEST(PacketProcessorsPoolTest, ProcessLargeNumberOfPacketMultiThread) {
 
     PcapReader reader;
     reader.setProcessor([&](const internal::Packet& packet) {
-      pool.addPacket(packet);
+      pool.addPacket(packet.copy());
     });
     reader.setFilename("http.pcap");
     reader.startReading();

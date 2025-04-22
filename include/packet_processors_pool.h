@@ -68,6 +68,7 @@ private:
     internal::coutDebug() << "thread started" << std::endl;
     internal::Packet packet{};
     while (getPacket(packet)) {
+      packet.parse();
       for (const auto& callback : callbacks_) {
         callback(packet);
       }

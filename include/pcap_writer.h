@@ -39,7 +39,7 @@ public:
       openPcap();
     }
 
-    if (!pcapWriter_->writePacket(packet.packet)) {
+    if (!pcapWriter_->writePacket(*packet.packet)) {
       ::std::cerr << "Error writing packet to pcap file\n";
     }
   }

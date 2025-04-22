@@ -49,7 +49,7 @@ TEST(PcapReaderTest, ReadSinglePacket) {
 
   PcapReader::PacketProcessor testProcessor = [&capturedPackets](
       const internal::Packet& packet) {
-    capturedPackets.push_back(packet);
+    capturedPackets.push_back(packet.copy());
   };
 
   reader.setProcessor(testProcessor);
@@ -72,7 +72,7 @@ TEST(PcapReaderTest, ReadDoublePackets) {
 
   PcapReader::PacketProcessor testProcessor = [&capturedPackets](
       const internal::Packet& packet) {
-    capturedPackets.push_back(packet);
+    capturedPackets.push_back(packet.copy());
   };
 
   reader.setProcessor(testProcessor);

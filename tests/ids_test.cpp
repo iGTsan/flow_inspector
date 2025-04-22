@@ -112,9 +112,9 @@ bool comparePcapFiles(const ::std::string& file1, const ::std::string& file2) {
     ::std::vector<::std::pair<timeval, ::std::vector<u_char>>> packets;
 
     reader.setProcessor([&packets](const internal::Packet& packet) {
-      timeval ts = convertTimespecToTimeval(packet.packet.getPacketTimeStamp());
-      const u_char* data = packet.packet.getRawData();
-      size_t len = packet.packet.getRawDataLen();
+      timeval ts = convertTimespecToTimeval(packet.packet->getPacketTimeStamp());
+      const u_char* data = packet.packet->getRawData();
+      size_t len = packet.packet->getRawDataLen();
       packets.emplace_back(ts, ::std::vector<u_char>(data, data + len));
     });
 

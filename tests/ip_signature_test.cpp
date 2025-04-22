@@ -36,7 +36,7 @@ TEST(IPSignatureTest, SingleIPMatch) {
   IPSignature signature(srcIps, dstIps);
   auto testPacket = createTestPacket("192.168.1.1", "10.0.0.1");
 
-  EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
+  EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket(), true}));
 }
 
 TEST(IPSignatureTest, NoIPMatch) {
@@ -46,7 +46,7 @@ TEST(IPSignatureTest, NoIPMatch) {
   IPSignature signature(srcIps, dstIps);
   auto testPacket = createTestPacket("192.168.1.2", "10.0.0.2");
 
-  EXPECT_FALSE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
+  EXPECT_FALSE(signature.check(Packet{*testPacket.packet.getRawPacket(), true}));
 }
 
 TEST(IPSignatureTest, SingleMatchWithEmptyDestinationSet) {
@@ -55,7 +55,7 @@ TEST(IPSignatureTest, SingleMatchWithEmptyDestinationSet) {
   IPSignature signature(srcIps, ::std::unordered_set<::std::pair<uint32_t, uint32_t>>{});
   auto testPacket = createTestPacket("192.168.1.1", "10.0.0.1");
 
-  EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
+  EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket(), true}));
 }
 
 TEST(IPSignatureTest, SingleMatchWithEmptySourceSet) {
@@ -64,7 +64,7 @@ TEST(IPSignatureTest, SingleMatchWithEmptySourceSet) {
   IPSignature signature(::std::unordered_set<::std::pair<uint32_t, uint32_t>>{}, dstIps);
   auto testPacket = createTestPacket("192.168.1.2", "10.0.0.1");
 
-  EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
+  EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket(), true}));
 }
 
 TEST(IPSignatureTest, SingleIPMatchFromSet) {
@@ -78,17 +78,17 @@ TEST(IPSignatureTest, SingleIPMatchFromSet) {
 
   {
     auto testPacket = createTestPacket("192.168.1.1", "10.0.0.1");
-    EXPECT_TRUE(signature->check(Packet{*testPacket.packet.getRawPacket()}));
+    EXPECT_TRUE(signature->check(Packet{*testPacket.packet.getRawPacket(), true}));
   }
 
   {
     auto testPacket = createTestPacket("192.168.2.1", "10.0.0.1");
-    EXPECT_FALSE(signature->check(Packet{*testPacket.packet.getRawPacket()}));
+    EXPECT_FALSE(signature->check(Packet{*testPacket.packet.getRawPacket(), true}));
   }
 
   {
     auto testPacket = createTestPacket("192.168.1.1", "10.0.0.2");
-    EXPECT_TRUE(signature->check(Packet{*testPacket.packet.getRawPacket()}));
+    EXPECT_TRUE(signature->check(Packet{*testPacket.packet.getRawPacket(), true}));
   }
 }
 
@@ -100,12 +100,12 @@ TEST(IPSignatureTest, CIDRMatch) {
 
   {
     auto testPacket = createTestPacket("192.168.1.5", "10.0.0.10");
-    EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
+    EXPECT_TRUE(signature.check(Packet{*testPacket.packet.getRawPacket(), true}));
   }
 
   {
     auto testPacket = createTestPacket("192.168.2.5", "10.0.1.10");
-    EXPECT_FALSE(signature.check(Packet{*testPacket.packet.getRawPacket()}));
+    EXPECT_FALSE(signature.check(Packet{*testPacket.packet.getRawPacket(), true}));
   }
 }
 

@@ -22,7 +22,7 @@ public:
         [this](const internal::Event& event) {
           logger_.logEvent(internal::LogEntry{
             .timestamp = logger_.getTime(),
-            .packet = event.packet,
+            .packet = event.packet.copy(),
             .alert = event.rule.getName(),
           });
         });

@@ -133,25 +133,41 @@ inline ::pcpp::RawPacket rawPacketFromVector(const ::std::vector<internal::byte>
 struct Packet {
   Packet() noexcept {}
 
-  Packet(::pcpp::RawPacket _packet) noexcept
-      : packet{::std::move(_packet)}
-      , parsed_packet{&packet}
+  Packet(const ::pcpp::RawPacket& _packet, bool parse_at_init = false) noexcept
+      : packet{::std::make_unique<::pcpp::RawPacket>(_packet)}
+  {
+    if (parse_at_init) {
+      parse();
+    }
+  }
+
+  Packet(Packet&& other) noexcept
+    : packet{::std::move(other.packet)}
+    , parsed_packet{::std::move(other.parsed_packet)}
   {}
 
+  Packet& operator=(Packet&& other) noexcept {
+    if (this != &other) {
+      packet = ::std::move(other.packet);
+      parsed_packet = ::std::move(other.parsed_packet);
+    }
+    return *this;
+  }
+
   bool operator==(const Packet& other) const noexcept {
-    return (packet.getRawDataLen() == other.packet.getRawDataLen() &&
-      ::memcmp(packet.getRawData(), other.packet.getRawData(), packet.getRawDataLen()) == 0);
+    return (packet->getRawDataLen() == other.packet->getRawDataLen() &&
+      ::memcmp(packet->getRawData(), other.packet->getRawData(), packet->getRawDataLen()) == 0);
   }
 
   bool operator!=(const Packet& other) const noexcept {
     return !(*this == other);
   }
 
-  std::string toString() const noexcept {
-    std::stringstream ss;
+  ::std::string toString() const noexcept {
+    ::std::stringstream ss;
     ss << "[";
-    const u_char* rawData = packet.getRawData();
-    size_t length = packet.getRawDataLen();
+    const u_char* rawData = packet->getRawData();
+    size_t length = packet->getRawDataLen();
     for (size_t i = 0; i < length; ++i) {
       if (i != 0) {
         ss << " ";
@@ -162,16 +178,33 @@ struct Packet {
     return ss.str();
   }
 
-  std::string toShortString() const noexcept {
-    if (packet.getRawDataLen() < 10) {
+  ::std::string toShortString() const noexcept {
+    if (packet->getRawDataLen() < 10) {
       return toString();
     }
     return "";
   }
 
-  ::pcpp::RawPacket packet;
-  ::pcpp::Packet parsed_packet;
-  std::unordered_set<const Signature*> signatures;
+  void parse() noexcept {
+    if (!parsed_packet) {
+      parsed_packet = ::std::make_unique<::pcpp::Packet>(packet.get());
+    }
+    VERIFY(parsed_packet, "Can't parse packet");
+  }
+
+  Packet copy() const noexcept {
+    return Packet{*packet};
+  }
+
+  const ::pcpp::Packet& getParsedPacket() const noexcept {
+    VERIFY(parsed_packet, "Can't parse packet");
+    return *parsed_packet;
+  }
+
+  ::std::unique_ptr<::pcpp::RawPacket> packet;
+  // std::unordered_set<const Signature*> signatures;
+ private:
+  ::std::unique_ptr<::pcpp::Packet> parsed_packet;
 };
 
 

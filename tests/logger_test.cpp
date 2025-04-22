@@ -9,7 +9,7 @@ TEST(LoggerTest, LogPacketEvent) {
   Logger logger;
   internal::Packet testPacket{internal::rawPacketFromVector(::std::vector<internal::byte>{1, 2, 3, 4})};
 
-  logger.logPacket(testPacket);
+  logger.logPacket(::std::move(testPacket));
 
   ::std::string exportedLog = logger.exportLogs();
   EXPECT_TRUE(exportedLog.find("Packet: [1 2 3 4]") != ::std::string::npos);
@@ -52,7 +52,7 @@ TEST(LoggerTest, ExportLogsToFile) {
   internal::Packet testPacket{internal::rawPacketFromVector(::std::vector<internal::byte>{1, 2, 3, 4})};
   auto testAlert = internal::Alert{"Test alert message"};
 
-  logger.logPacket(testPacket);
+  logger.logPacket(::std::move(testPacket));
   logger.logAlert(testAlert);
 
   ::std::string tempFileName = "temp_log.txt";
@@ -79,7 +79,7 @@ TEST(LoggerTest, HandleLargeNumberOfLogEntries) {
   for (int i = 0; i < numEntries; ++i) {
     if (i % 2 == 0) {
       internal::Packet packet{internal::rawPacketFromVector(::std::vector<internal::byte>{1, 2, 3, 4})};
-      logger.logPacket(packet);
+      logger.logPacket(::std::move(packet));
     } else {
       auto alert = internal::Alert{"Test alert message"};
       logger.logAlert(alert);
@@ -117,7 +117,7 @@ TEST(LoggerTest, LogRotationWhenMaxEntriesExceeded) {
   for (int i = 0; i <= Logger::DEFAULT_MAX_LOG_ENTRIES; ++i) {
     internal::Packet packet{internal::rawPacketFromVector(
         ::std::vector<internal::byte>{static_cast<internal::byte>(i)})};
-    logger.logPacket(packet);
+    logger.logPacket(::std::move(packet));
   }
 
   ::std::this_thread::sleep_for(::std::chrono::milliseconds(10));
@@ -125,7 +125,7 @@ TEST(LoggerTest, LogRotationWhenMaxEntriesExceeded) {
   for (int i = 0; i < Logger::DEFAULT_MAX_LOG_ENTRIES - 100; ++i) {
     internal::Packet packet{internal::rawPacketFromVector(
         ::std::vector<internal::byte>{static_cast<internal::byte>(i)})};
-    logger.logPacket(packet);
+    logger.logPacket(::std::move(packet));
   }
 
   ::std::ifstream file(tempFileName);

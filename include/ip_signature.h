@@ -66,7 +66,7 @@ class IPSignature: public Signature {
     , dst_ip_masks_(dstIpMasks.begin(), dstIpMasks.end()) {}
 
   bool check(const Packet& packet) const noexcept override {
-    const auto& pcpp_packet = packet.parsed_packet;
+    const auto& pcpp_packet = packet.getParsedPacket();
     const auto ip_layer = pcpp_packet.getLayerOfType<pcpp::IPv4Layer>();
     if (!ip_layer) {
       return false;

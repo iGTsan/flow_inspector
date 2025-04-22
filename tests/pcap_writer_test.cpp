@@ -27,7 +27,7 @@ TEST(PcapWriterTest, SavePacket) {
   int result = pcap_next_ex(handle, &header, &packet);
   ASSERT_EQ(result, 1) << "Failed to read packet from pcap file";
 
-  EXPECT_EQ(memcmp(packet, testPacket.packet.getRawData(), testPacket.packet.getRawDataLen()), 0);
+  EXPECT_EQ(memcmp(packet, testPacket.packet->getRawData(), testPacket.packet->getRawDataLen()), 0);
 
   pcap_close(handle);
   std::remove("test_output.pcap");
@@ -56,7 +56,7 @@ TEST(PcapWriterReaderTest, SaveAndReadPacket) {
   ::std::vector<internal::Packet> capturedPackets;
 
   PcapReader::PacketProcessor processor = [&capturedPackets](const internal::Packet& packet) {
-    capturedPackets.push_back(packet);
+    capturedPackets.push_back(packet.copy());
   };
 
   reader.setProcessor(processor);
