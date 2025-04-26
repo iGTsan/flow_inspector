@@ -65,4 +65,5 @@ else
         -DCMAKE_CXX_COMPILER="$COMPILER"
     cmake --build . -- -j$(nproc)
     ctest --output-on-failure
+    
 fi

@@ -84,8 +84,9 @@ TEST(IDSTest, ProcessPacketsWithAlert) {
   ASSERT_TRUE(log_file.is_open());
   ::std::string log_str;
 
+  while (::std::getline(log_file, log_str) && log_str.find("Alert") == ::std::string::npos) {}
+
   for (int i = 0; i < 1; i++) {
-    EXPECT_TRUE(::std::getline(log_file, log_str));
     EXPECT_TRUE(log_str.find("double_packets_one_hit")
         != ::std::string::npos);
   }

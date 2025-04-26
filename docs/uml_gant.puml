@@ -1,0 +1,41 @@
+%%{init: {
+
+  "theme": "default",
+  "gantt": {
+    "fontSize": 15,
+    "sectionFontSize": 15,
+    "barGap": 15,
+    "barHeight": 20,
+    "numberSectionStyles": 3,
+    "topAxis": true,
+    "useWidth": 850,
+    "gridLineStartPadding": 45,
+    "useMaxWidth": true
+  }
+}}%%
+gantt
+    title Диаграмма Ганта: Этапы доработки инструмента
+    dateFormat YYYY-MM-DD
+    axisFormat %Y-%m-%d
+    
+    section Анализ и планирование
+    Анализ недостатков        :AN, 2025-02-01, 2025-02-15
+    Планирование изменений    :PL, 2025-02-16, 2025-02-20
+    
+    section Оптимизация производительности
+    Оптимизация использования памяти        :OM, 2025-02-21, 2025-03-01
+    
+    section Расширение функциональности
+    Поддержка TCP/IPv4        :UT, 2025-03-01, 2025-03-25
+    Поддержка динамического обновления конфигурации :DC, 2025-03-05, 2025-03-14
+    Поддержка правил других вендоров :UP, 2025-03-15, 2025-03-22
+    
+    section Тестирование и документация
+    Тестирование и анализ              :TE, 2025-03-25, 2025-04-05
+    Составление отчета      :DO, 2025-04-05, 2025-04-15
+    Планирование следующего этапа :PS, 2025-04-15, 2025-04-25
+    
+
+    
+
+https://mermaid.live/edit#pako:eNqFVVtPGkEU_iubSXwDu1fEfTNS2yZSSdA0Nrys7gCbwC5ZhkYlJIL2ll5sUp9r0_cmKFCpiP6FmX_UMzMLrBHSIewezpnzfd85c6GJ9gMXIxsV_JLjE1LwFRjEIxWs0HM6pF3aY8fwvIVPV6HfwRyzDu3aCv3N3_SefVJon96JWZfw7tAbOlQgdczarMOO2QmkDmSWhHcdgjeCsOoQZRdGMptNZjIy5Bx49Si0tJtcqiaXXBmQzzreJ17gK_QbHQPdCFiuFc52DzYoo0OQcUevpE0HMuvh7DGI4XrbXJBQCwlKNOy1lwlFV3UrqepJVZvZmhVhXcxn4gVfy0LFd0j_CrzcZgwjNbN1dW5dP6CfHUi-FXBd9g54zqA8QcZdV_Dug7MDLCP2GZhkJcNI3iIAvoTsjIempW5lY3KmpRpQ9lxpPwGtzT6IwgdR0ewUVndMbzgNCBNdniPqQoju0wGk_oGGd5Xt9dyTF7k35lTMznZcwMzWrYUYvA-CEmpl7yHQFmvZo3cKvC65CmjXSIrlTeDRMTuFrB474ftVyB4qdmY9Rm7NbM1cTH4vNvwVAIxAidjmPaB5q4CPM8ojwbeWvZOLQcbgdX1uo3_xUnj3Hu0wcdCg27ETJRc4krko8-Gwt5_G-zuxTSg9wjmfzyIUwAEXze7AuZdwma04xMz-75GBBeOr04fF-Mo-gsWXjn2R1wr02M7l42gze7IpCj5KoFLoucgmYQMnUBXD1cF_oiafUUCkjKu4gGwwXVx0GhVSQAkZkvcdhJoRGCoGPsl7R2I-0E3c0cJszI_uOeEzp_bY-Rx7pbLA19Wp329U93CYl4B5cljBdT7DmE4gQW0NrkDuFBVN_I06fuW5pMwDaWsGyIvf9HycJ05Ico7ren6JzzGteGrWOZhmc1geahX8FnSv5vivg6A6aWAYNEplZBedSh1-NWr8qs54Til0qlNviH0Xh-tBwyfITqtQHkdBdhMdIHvFWDY03Uzp5qqqG5ZlJNAhsrUVa9k0jRVDS6VTprqqma0EOhK86nJ6xVJh6KuapeqptJZA2PVIEGblP9N-4Be9Emr9A13U-RM

@@ -1,0 +1,27 @@
+@startuml
+actor Администратор
+participant TrafficCapture
+participant PacketProcessorsPool
+participant PacketProcessor
+participant Analyzer
+participant EventsHandler
+participant Logger
+actor Аналитик
+
+Администратор -> TrafficCapture: startCapture(interfaceName)
+
+loop Перехват и обработка пакетов
+    TrafficCapture -> PacketProcessorsPool: addPacket(Packet)
+    PacketProcessorsPool -> PacketProcessor: processPacket(Packet)
+    PacketProcessor -> Analyzer: detectThreat(Packet)
+    Analyzer -> Analyzer: Обнаружение угрозы
+    
+    alt [Угроза обнаружена]
+        Analyzer -> EventsHandler: addEvent(Event)
+        EventsHandler -> Logger: logAlert(Alert)
+        Logger --> Аналитик: Обнаружена угроза
+    end
+end
+@enduml
+
+https://www.plantuml.com/plantuml/uml/bLAzZjD04Exz55Cc1I_W0jq98L6SK8hh4CLYRq9q6w-rtY0TLJX4HG5F01AyW1CmM3bYNk7p6p5h7rPizXonaZUpcVc--VdcBBF2sFLA1IAosX0-uZj-eSG1PVsclgatoEiRLFKcI3bm6IrJaLYwD68-NqQFH6hNHlPSCn5TIJipEf9Pfaqsqrhr0YxqOY7D6ARdEq-4kduz03n-9HFxH2In6ZYu_WDotABagaliW-3-ZkZ1mq4Z8JNZk7jDbecLPYuY-LIiv3G8bDOfFSDd5FM6ltVOEIf2IQYmTSJOecBoFNB2R-Hi52uNTiy38Xfau_pUQOMKjk_MEMb_fex16-zusg66fFIYcStaWet4ckjHsF3__yZCw4wQa69fPMGlNnefUgWkn9FCK-mGmw1ZfKF29soTmFMcVeiVA9oeA8WVttZy5NxMxnkAvXBAibfV_xgS9jK_y9oLQKylbQjtk4iXYJXk2sxkQOSSHdegpsGIdxDb9yqz7Sjwpxvwsy-FcaVUiNQ6JjqGlhY5nPP3UH-PzGCnqIrZzYWRx0xxur7m6Id4qzuBfQEhk_NkBO0xt7fd-_i-lS5IPNAevW75kAI-fJsLXsjrtnbVwvNw0m00

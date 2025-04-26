@@ -34,11 +34,17 @@ public:
       ("log-level", "Logging to stdout verbosity level: debug or info",
           ::cxxopts::value<::std::string>()->default_value("info"))
       ("h,help", "Display this help message");
+    
+    options.custom_help("[OPTIONS]");
+    
     try {
       auto result = options.parse(argc, argv);
 
       if (result.count("help")) {
         ::std::cout << options.help() << ::std::endl;
+        ::std::cout << "\nAdditional Information:" << ::std::endl;
+        ::std::cout << "  SIGHUP Signal:        Send SIGHUP signal to the running process to reload rules" << ::std::endl;
+        ::std::cout << "                        Example: kill -HUP <pid>" << ::std::endl;
         exit(0);
       }
 
@@ -73,8 +79,18 @@ public:
 
     } catch (const ::cxxopts::exceptions::exception& e) {
       ::std::cout << options.help() << ::std::endl;
+      ::std::cout << "\nAdditional Information:" << ::std::endl;
+      ::std::cout << "  SIGHUP Signal:        Send SIGHUP signal to the running process to reload rules" << ::std::endl;
+      ::std::cout << "                        Example: kill -HUP <pid>" << ::std::endl;
       ::std::cerr << "Error parsing options: " << e.what() << ::std::endl;
       exit(1);
+    }
+  }
+  
+  void updateRules() noexcept {
+    if (ids_ && !rules_file_.empty()) {
+      ::std::cout << "Received SIGHUP signal. Reloading rules from: " << rules_file_ << ::std::endl;
+      ids_->loadRules(rules_file_);
     }
   }
 
@@ -95,6 +111,10 @@ public:
     ids_->setPcapOutputFilename(pcap_output_file_);
     ids_->setLogLevel(log_level_);
     ids_->setStatSpeed(stat_speed_);
+    
+    ::std::cout << "FlowInspector started. Send SIGHUP signal to reload rules from: " 
+                << (rules_file_.empty() ? "<no rules file specified>" : rules_file_) << ::std::endl;
+    ::std::cout << "Process ID: " << ::getpid() << ::std::endl;
     
     ids_->start();
   }
