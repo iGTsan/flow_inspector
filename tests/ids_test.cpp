@@ -1,9 +1,10 @@
 
 #include <gtest/gtest.h>
+#include <fstream>
+
 #include "ids.h"
 #include "logger.h"
 #include "pcap_reader.h"
-#include <fstream>
 
 
 namespace flow_inspector::internal {

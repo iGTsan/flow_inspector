@@ -9,23 +9,23 @@ namespace flow_inspector::internal {
 
 
 class NullBuffer : public ::std::streambuf {
-protected:
-    virtual int overflow(int c) override {
-        return c;
-    }
+ protected:
+  virtual int overflow(int c) override {
+    return c;
+  }
 };
 
 class NullOStream : public ::std::ostream {
-public:
+ public:
   NullOStream() : ::std::ostream(&nullBuffer) {}
 
-private:
+ private:
   NullBuffer nullBuffer;
 };
 
 
 class CoutLevel {
-public:
+ public:
   enum class Level {
     INFO,
     DEBUG,
@@ -46,10 +46,11 @@ public:
     level_ = Level::INFO;
   }
 
-private:
+ private:
   NullOStream null_ostream;
   Level level_{Level::INFO};
 };
+
 
 inline CoutLevel& getCoutLevel() {
   static CoutLevel cout_level;
@@ -65,5 +66,6 @@ inline ::std::ostream& coutInfo() {
   auto& cout_level = getCoutLevel();
   return cout_level.getStream(CoutLevel::Level::INFO);
 }
+
 
 }  // namespace flow_inspector::internal

@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+
 #include "internal_structs.h"
 #include "raw_bytes_signature.h"
 

@@ -1,11 +1,14 @@
 #include <gtest/gtest.h>
+
 #include <pcap.h>
+
 #include "EthLayer.h"
+#include "IPv4Layer.h"
 #include "Packet.h"
 #include "PayloadLayer.h"
 #include "TcpLayer.h"
-#include "IPv4Layer.h"
 #include "UdpLayer.h"
+
 #include "tcp_signature.h"
 
 namespace {

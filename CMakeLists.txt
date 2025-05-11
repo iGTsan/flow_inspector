@@ -14,7 +14,24 @@ set(CXXOPTS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cxxopts/include)
 find_package(Pcap REQUIRED)
 add_subdirectory("${CMAKE_SOURCE_DIR}/third_party/PcapPlusPlus")
 
-add_library(FlowInspectorLibrary src/ids_lib.cpp)
+add_library(FlowInspectorLibrary
+    src/analyzer.cpp
+    src/content_signature.cpp
+    src/events_handler.cpp
+    src/ids_cli.cpp
+    src/ids.cpp
+    src/internal_structs.cpp
+    src/ip_signature.cpp
+    src/logger.cpp
+    src/packet_origin.cpp
+    src/packet_processors_pool.cpp
+    src/pcap_reader.cpp
+    src/pcap_writer.cpp
+    src/raw_bytes_signature.cpp
+    src/signature_factory.cpp
+    src/tcp_signature.cpp
+    src/traffic_capturer.cpp)
+
 target_include_directories(FlowInspectorLibrary PUBLIC include)
 include_directories(${CONCURRENTQUEUE_INCLUDE_DIR})
 include_directories(${CXXOPTS_INCLUDE_DIR})

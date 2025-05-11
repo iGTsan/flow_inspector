@@ -1,51 +1,38 @@
 #pragma once
 
 #include <functional>
-#include <vector>
 #include <atomic>
 
 #include <pcap.h>
 
 #include "internal_structs.h"
-#include "debug_logger.h"
-#include "Packet.h"
 
 
 namespace flow_inspector {
 
 
 class PacketOrigin {
-public:
+ public:
   using PacketProcessor = ::std::function<void(internal::Packet)>;
 
-  void setProcessor(PacketProcessor processor) noexcept {
-    packet_processor_ = ::std::move(processor);
-  }
+  void setProcessor(PacketProcessor processor) noexcept;
 
-  void processPacket(const ::pcpp::RawPacket& packet) {
-    packet_processor_(internal::Packet{packet});
-  }
+  void processPacket(const ::pcpp::RawPacket& packet) noexcept;
 
   virtual void startReading() noexcept = 0;
 
   virtual ::pcpp::LinkLayerType getLinkLayerType() noexcept = 0;
 
-  void stopReading() noexcept {
-    internal::coutDebug() << "Stopping reading" << std::endl;
-    done_.store(true);
-    internalStopReading();
-  }
+  void stopReading() noexcept;
 
-  bool isDoneReading() const noexcept {
-    return done_.load();
-  }
+  bool isDoneReading() const noexcept;
 
   virtual ~PacketOrigin() = default;
 
-protected:
+ protected:
   virtual void internalStopReading() noexcept = 0;
 
-private:
+ private:
   PacketProcessor packet_processor_;
   ::std::atomic<bool> done_;
 };

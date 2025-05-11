@@ -1,16 +1,8 @@
 #pragma once
 
-#include <functional>
-#include <filesystem>
-#include <memory>
-#include <iostream>
-
 #include "RawPacket.h"
-#include "events_handler.h"
-#include "logger.h"
-#include "packet_origin.h"
 
-#include "PcapFileDevice.h"
+#include "packet_origin.h"
 
 
 namespace flow_inspector {
@@ -18,44 +10,17 @@ namespace flow_inspector {
 
 class PcapReader: public PacketOrigin {
  public:
-  void setFilename(const ::std::string& filename) noexcept {
-    input_file_ = filename;
-  }
+  void setFilename(const ::std::string& filename) noexcept;
 
-  void startReading() noexcept override {
-    ::pcpp::IFileReaderDevice* reader = ::pcpp::IFileReaderDevice::getReader(input_file_);
-    if (!reader->open()) {
-      ::std::filesystem::path current_path = ::std::filesystem::current_path();
-      ::std::cerr << "Error opening pcap file: " << input_file_ << ::std::endl;
-      ::std::cerr << "Current directory is " << current_path << ::std::endl;
-      delete reader;
-      return;
-    }
+  void startReading() noexcept override;
 
-    ::pcpp::RawPacket raw_packet;
-    while (reader->getNextPacket(raw_packet) && !isDoneReading()) {
-      processPacket(raw_packet);
-    }
+  void internalStopReading() noexcept override;
 
-    reader->close();
-    delete reader;
-  }
-
-  void internalStopReading() noexcept override {}
-
-  ::pcpp::LinkLayerType getLinkLayerType() noexcept override {
-    ::pcpp::PcapFileReaderDevice reader{input_file_};
-    if (!reader.open()) {
-      ::std::filesystem::path current_path = ::std::filesystem::current_path();
-      ::std::cerr << "Error opening pcap file: " << input_file_ << ::std::endl;
-      ::std::cerr << "Current directory is " << current_path << ::std::endl;
-      return ::pcpp::LinkLayerType::LINKTYPE_DLT_RAW1;
-    }
-    return reader.getLinkLayerType();
-  }
+  ::pcpp::LinkLayerType getLinkLayerType() noexcept override;
 
  private:
     ::std::string input_file_;
 };
+
 
 }  // namespace flow_inspector

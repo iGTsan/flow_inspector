@@ -1,10 +1,13 @@
 #include <gtest/gtest.h>
+
+#include <pcap.h>
+
 #include "EthLayer.h"
 #include "IPv4Layer.h"
 #include "Packet.h"
+
 #include "ip_signature.h"
 #include "internal_structs.h"
-#include <pcap.h>
 
 
 namespace flow_inspector::internal {

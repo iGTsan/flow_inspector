@@ -1,28 +1,22 @@
 #pragma once
 
-#include <cstring>
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <fstream>
-#include <queue>
-#include <string>
-#include <sstream>
-#include <ctime>
-#include <memory>
-#include <chrono>
-#include <optional>
 #include <cstdint>
-#include <span>
 #include <cstdlib>
-#include <unordered_set>
+#include <cstring>
+#include <ctime>
+#include <string>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <span>
+#include <vector>
 
 #include <pcap.h>
 #include "IpAddress.h"
 #include "Packet.h"
 
 #include "RawPacket.h"
-#include "debug_logger.h"
+
 
 #define VERIFY(expression, message) \
   do { \
@@ -34,19 +28,7 @@
   } while (false)
 
 
-inline ::std::string trim(const ::std::string& str) {
-  auto start = str.begin();
-  while (start != str.end() && ::std::isspace(*start)) {
-      start++;
-  }
-
-  auto end = str.end();
-  do {
-      end--;
-  } while (::std::distance(start, end) > 0 && ::std::isspace(*end));
-
-  return ::std::string(start, end + 1);
-}
+::std::string trim(const ::std::string& str) noexcept;
 
 
 namespace flow_inspector::internal {
@@ -60,47 +42,24 @@ using byte = uint8_t;
 
 
 class ByteVector {
-public:
-  ByteVector(::std::vector<byte> data) noexcept
-    : holder_{::std::make_shared<const ::std::vector<byte>>(::std::move(data))}
-    , data_{holder_->data(), holder_->size()}
-  {}
+ public:
+  ByteVector(::std::vector<byte> data) noexcept;
 
-  ByteVector makeSubvector(const size_t offset, const size_t length) const noexcept {
-    ByteVector result = *this;
-    result.data_ = result.data_.subspan(offset, length);
-    return result;
-  }
+  ByteVector makeSubvector(const size_t offset, const size_t length) const noexcept;
 
-  ::std::span<const byte>* operator->() noexcept {
-    return &data_;
-  }
+  ::std::span<const byte>* operator->() noexcept;
 
-  const ::std::span<const byte>* operator->() const noexcept {
-    return &data_;
-  }
+  const ::std::span<const byte>* operator->() const noexcept;
 
-  const ::std::span<const byte> operator*() const noexcept {
-    return data_;
-  }
+  const ::std::span<const byte> operator*() const noexcept;
 
-  bool operator==(const ByteVector& other) const noexcept {
-    return data_.size() == other.data_.size() &&
-        ::std::equal(data_.begin(), data_.end(), other.data_.begin());
-  }
+  bool operator==(const ByteVector& other) const noexcept;
 
-  bool operator!=(const ByteVector& other) const noexcept {
-    return !(*this == other);
-  }
+  bool operator!=(const ByteVector& other) const noexcept;
 
-  void print() const noexcept {
-    for (auto it = data_.begin(); it!= data_.end(); ++it) {
-      coutDebug() << int(*it) << " ";
-    }
-    coutDebug() << "\n";
-  }
+  void print() const noexcept;
 
-private:
+ private:
   template <typename T>
   friend struct ::std::hash;
 
@@ -109,116 +68,49 @@ private:
 };
 
 
-inline ByteVector byteVectorFromPCPP(const ::pcpp::RawPacket& packet) {
-  const u_char* raw_data = packet.getRawData();
-  size_t length = packet.getRawDataLen();
+ByteVector byteVectorFromPCPP(const ::pcpp::RawPacket& packet) noexcept;
 
-  return ByteVector(::std::vector<byte>(raw_data, raw_data + length));
-}
-
-inline ::pcpp::RawPacket rawPacketFromVector(const ::std::vector<internal::byte>& vec, const timeval& timestamp = {}) {
-  size_t length = vec.size();
-  const u_char* raw_data = vec.data();
-
-  timeval time_stamp_copy = timestamp;
-
-  if (time_stamp_copy.tv_sec == 0 && time_stamp_copy.tv_usec == 0) {
-    gettimeofday(&time_stamp_copy, nullptr);
-  }
-
-  return ::pcpp::RawPacket(raw_data, length, time_stamp_copy, false);
-}
+::pcpp::RawPacket rawPacketFromVector(
+    const ::std::vector<internal::byte>& vec, const timeval& timestamp = {}) noexcept;
 
 
 struct Packet {
-  Packet() noexcept {}
+  Packet() noexcept;
 
-  Packet(const ::pcpp::RawPacket& _packet, bool parse_at_init = false) noexcept
-      : packet{::std::make_unique<::pcpp::RawPacket>(_packet)}
-  {
-    if (parse_at_init) {
-      parse();
-    }
-  }
+  Packet(const ::pcpp::RawPacket& _packet, bool parse_at_init = false) noexcept;
 
-  Packet(Packet&& other) noexcept
-    : packet{::std::move(other.packet)}
-    , parsed_packet{::std::move(other.parsed_packet)}
-  {}
+  Packet(Packet&& other) noexcept;
 
-  Packet& operator=(Packet&& other) noexcept {
-    if (this != &other) {
-      packet = ::std::move(other.packet);
-      parsed_packet = ::std::move(other.parsed_packet);
-    }
-    return *this;
-  }
+  Packet& operator=(Packet&& other) noexcept;
 
-  bool operator==(const Packet& other) const noexcept {
-    return (packet->getRawDataLen() == other.packet->getRawDataLen() &&
-      ::memcmp(packet->getRawData(), other.packet->getRawData(), packet->getRawDataLen()) == 0);
-  }
+  bool operator==(const Packet& other) const noexcept;
 
-  bool operator!=(const Packet& other) const noexcept {
-    return !(*this == other);
-  }
+  bool operator!=(const Packet& other) const noexcept;
 
-  ::std::string toString() const noexcept {
-    ::std::stringstream ss;
-    ss << "[";
-    const u_char* rawData = packet->getRawData();
-    size_t length = packet->getRawDataLen();
-    for (size_t i = 0; i < length; ++i) {
-      if (i != 0) {
-        ss << " ";
-      }
-      ss << int(rawData[i]);
-    }
-    ss << "]";
-    return ss.str();
-  }
+  ::std::string toString() const noexcept;
 
-  ::std::string toShortString() const noexcept {
-    if (packet->getRawDataLen() < 10) {
-      return toString();
-    }
-    return "";
-  }
+  ::std::string toShortString() const noexcept;
 
-  void parse() noexcept {
-    if (!parsed_packet) {
-      parsed_packet = ::std::make_unique<::pcpp::Packet>(packet.get());
-    }
-    VERIFY(parsed_packet, "Can't parse packet");
-  }
+  void parse() noexcept;
 
-  Packet copy() const noexcept {
-    return Packet{*packet};
-  }
+  Packet copy() const noexcept;
 
-  const ::pcpp::Packet& getParsedPacket() const noexcept {
-    VERIFY(parsed_packet, "Can't parse packet");
-    return *parsed_packet;
-  }
+  const ::pcpp::Packet& getParsedPacket() const noexcept;
 
   ::std::unique_ptr<::pcpp::RawPacket> packet;
-  // std::unordered_set<const Signature*> signatures;
+
  private:
   ::std::unique_ptr<::pcpp::Packet> parsed_packet;
 };
 
 
 class Alert {
-public:
-  Alert(const ::std::string& message) noexcept
-    : message_{message}
-  {}
+ public:
+  Alert(const ::std::string& message) noexcept;
 
-  ::std::string toString() const noexcept {
-    return message_;
-  }
+  ::std::string toString() const noexcept;
 
-private:
+ private:
   ::std::string message_;
 };
 
@@ -232,7 +124,7 @@ struct LogEntry {
 
 
 class Signature {
-public:
+ public:
   virtual bool check(const Packet& packet) const noexcept = 0;
 
   virtual size_t hash() const noexcept = 0;
@@ -254,24 +146,9 @@ struct Event {
     InvalidEventType,
   };
 
-  static bool isValidEventType(const std::string& event) {
-    return event == "Alert" ||
-      event == "Notify" ||
-      event == "SaveToPcap" ||
-      event == "TestEvent" ||
-      event == "TestEvent1" ||
-      event == "TestEvent2";
-  }
+  static bool isValidEventType(const std::string& event) noexcept;
 
-  static EventType stringToEventType(const std::string& event) {
-    if (event == "Alert") return EventType::Alert;
-    if (event == "Notify") return EventType::Notify;
-    if (event == "SaveToPcap") return EventType::SaveToPcap;
-    if (event == "TestEvent") return EventType::TestEvent;
-    if (event == "TestEvent1") return EventType::TestEvent1;
-    if (event == "TestEvent2") return EventType::TestEvent2;
-    return EventType::InvalidEventType;
-  }
+  static EventType stringToEventType(const std::string& event) noexcept;
 
   const EventType type;
   const Rule& rule;
@@ -280,41 +157,20 @@ struct Event {
 
 
 class Rule {
-public:
-  Rule(const ::std::string& name, const Event::EventType type) noexcept
-    : name_{name}
-    , type_{type}
-  {}
+ public:
+  Rule(const ::std::string& name, const Event::EventType type) noexcept;
 
-  const ::std::string& getName() const noexcept {
-    return name_;
-  }
+  const ::std::string& getName() const noexcept;
 
-  const Event::EventType& getType() const noexcept {
-    return type_;
-  }
+  const Event::EventType& getType() const noexcept;
 
-  void addSignature(const Signature* signature) noexcept {
-    signatures_.push_back(signature);
-  }
+  void addSignature(const Signature* signature) noexcept;
 
-  bool check(const Packet& packet) const noexcept {
-    for (const auto& sig: signatures_) {
-      if (!sig->check(packet)) {
-        return false;
-      }
-    }
-    return true;
-  }
+  bool check(const Packet& packet) const noexcept;
 
-  bool operator==(const Rule& other) const noexcept {
-    if (name_ != other.name_) {
-      return false;
-    }
-    return signatures_ == other.signatures_;
-  }
+  bool operator==(const Rule& other) const noexcept;
 
-private:
+ private:
   template <typename T>
   friend struct ::std::hash;
 
@@ -325,18 +181,14 @@ private:
 
 
 class Parser {
-public:
+ public:
   virtual void parse(const Packet& packet) noexcept = 0;
 
   virtual const Packet* nextLayer() noexcept = 0;
 };
 
 
-inline bool safeStringToInt(const ::std::string& str, int& result) {
-  ::std::istringstream iss(str);
-  iss >> result;
-  return !iss.fail() && iss.eof();
-}
+bool safeStringToInt(const ::std::string& str, int& result) noexcept;
 
 
 }  // namespace flow_inspector::internal

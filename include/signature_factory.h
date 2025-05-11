@@ -1,11 +1,10 @@
-#include <iostream>
-#include <sstream>
+#pragma once
+
 #include <unordered_map>
 #include <functional>
 #include <string>
-#include <vector>
 #include <memory>
-#include <optional>
+
 #include "internal_structs.h"
 
 
@@ -13,28 +12,17 @@ namespace flow_inspector::internal {
 
 
 class SignatureFactory {
-public:
+ public:
   using SignatureCreator = std::function<std::unique_ptr<Signature>(const ::std::string&)>;
   
-  static SignatureFactory& instance() {
-    static SignatureFactory factory;
-    return factory;
-  }
+  static SignatureFactory& instance() noexcept;
 
-  void registerSignatureType(const std::string& type, SignatureCreator creator) {
-    creators_[type] = creator;
-  }
+  void registerSignatureType(const std::string& type, SignatureCreator creator) noexcept;
 
   std::unique_ptr<internal::Signature> createSignature(
-      const std::string& type, const std::string& initString) const {
-    auto it = creators_.find(type);
-    if (it != creators_.end()) {
-      return (it->second)(initString);
-    }
-    return nullptr;
-  }
+      const std::string& type, const std::string& initString) const noexcept;
 
-private:
+ private:
   std::unordered_map<std::string, SignatureCreator> creators_;
 };
 

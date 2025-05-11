@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+
 #include "analyzer.h"
 #include "debug_logger.h"
 

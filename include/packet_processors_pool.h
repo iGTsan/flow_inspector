@@ -11,70 +11,25 @@ namespace flow_inspector {
 
 
 class PacketProcessorsPool {
-public:
+ public:
   using Callback = ::std::function<void(const internal::Packet&)>;
 
-  PacketProcessorsPool(Analyzer& analyzer, const uint8_t num_packet_processors) noexcept
-    : analyzer_{analyzer}
-  {
-    addCallback([this](const internal::Packet& packet) {
-      analyzer_.detectThreats(packet);
-    });
-    for (uint8_t i = 0; i < num_packet_processors; ++i) {
-      internal::coutDebug() << "thread initialization started" << std::endl;
-      processors_.emplace_back(&PacketProcessorsPool::processPacket, this);
-      internal::coutDebug() << "thread initialized" << std::endl;
-    }
-  }
+  PacketProcessorsPool(Analyzer& analyzer, const uint8_t num_packet_processors) noexcept;
 
-  void addCallback(Callback callback) noexcept {
-    callbacks_.push_back(callback);
-  }
+  void addCallback(Callback callback) noexcept;
 
-  void addPacket(internal::Packet packet) noexcept {
-    packets_.enqueue(::std::move(packet));
-  }
+  void addPacket(internal::Packet packet) noexcept;
 
-  bool getPacket(internal::Packet& result) noexcept {
-    while (!packets_.try_dequeue(result)) {
-      if (done_.load()) {
-        return false;
-      }
-      ::std::this_thread::sleep_for(kSleepTime);
-    }
-    return true;
-  }
+  bool getPacket(internal::Packet& result) noexcept;
 
-  ~PacketProcessorsPool() noexcept {
-    finish();
-  }
+  ~PacketProcessorsPool() noexcept;
 
-  void finish() noexcept {
-    if (done_.load()) {
-      return;
-    }
-    internal::coutDebug() << "finish called" << std::endl;
-    done_.store(true);
-    internal::coutDebug() << "done stored" << std::endl;
-    for (auto& thread : processors_) {
-      thread.join();
-    }
-  }
+  void finish() noexcept;
 
-private:
+ private:
   static constexpr ::std::chrono::milliseconds kSleepTime{10};
 
-  void processPacket() noexcept {
-    internal::coutDebug() << "thread started" << std::endl;
-    internal::Packet packet{};
-    while (getPacket(packet)) {
-      packet.parse();
-      for (const auto& callback : callbacks_) {
-        callback(packet);
-      }
-    }
-    internal::coutDebug() << "thread ended" << std::endl;
-  }
+  void processPacket() noexcept;
 
   ::moodycamel::ConcurrentQueue<internal::Packet> packets_;
 

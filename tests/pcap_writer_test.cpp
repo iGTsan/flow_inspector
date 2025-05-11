@@ -1,8 +1,9 @@
 #include <gtest/gtest.h>
-#include "pcap_writer.h"
-#include "pcap_reader.h"
 
 #include "RawPacket.h"
+
+#include "pcap_writer.h"
+#include "pcap_reader.h"
 
 
 namespace flow_inspector {
@@ -17,7 +18,6 @@ TEST(PcapWriterTest, SavePacket) {
     writer.savePacket(testPacket);
   }
 
-  // Open the generated pcap file and verify its contents
   char errbuf[PCAP_ERRBUF_SIZE];
   pcap_t* handle = pcap_open_offline("test_output.pcap", errbuf);
   ASSERT_NE(handle, nullptr) << "Failed to open test_output.pcap: " << errbuf;

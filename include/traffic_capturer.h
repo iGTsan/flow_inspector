@@ -1,14 +1,10 @@
 #pragma once
 
+#include <string>
+
 #include <PcapLiveDeviceList.h>
 #include <PcapLiveDevice.h>
-#include <iostream>
-#include <string>
-#include <thread>
-#include <chrono>
-#include "logger.h"
-#include "events_handler.h"
-#include "internal_structs.h"
+
 #include "packet_origin.h"
 
 
@@ -16,71 +12,26 @@ namespace flow_inspector {
 
 
 class TrafficCapturer : public PacketOrigin {
-public:
-  TrafficCapturer() : device_(nullptr) {}
+ public:
+  TrafficCapturer() noexcept;
 
-  ~TrafficCapturer() {
-    if (device_) {
-      device_->stopCapture();
-    }
-  }
+  ~TrafficCapturer() noexcept;
 
-  void setInterfaceName(const ::std::string& interface_name) noexcept {
-    interface_name_ = interface_name;
-  }
+  void setInterfaceName(const ::std::string& interface_name) noexcept;
 
-  void startReading() noexcept override {
-    device_ = ::pcpp::PcapLiveDeviceList::getInstance().getPcapLiveDeviceByName(interface_name_);
-    if (device_ == nullptr) {
-      ::std::cerr << "Couldn't find device " << interface_name_ << ::std::endl;
-      return;
-    }
-    
-    if (!device_->open()) {
-      ::std::cerr << "Couldn't open device " << interface_name_ << ::std::endl;
-      return;
-    }
+  void startReading() noexcept override;
 
-    device_->startCapture(onPacketArrives, this);
+  void internalStopReading() noexcept override;
 
-    // Wait for reading to complete
-    while (!isDoneReading()) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
+  ::pcpp::LinkLayerType getLinkLayerType() noexcept override;
 
-    device_->stopCapture();
-    device_->close();
-  }
-
-  void internalStopReading() noexcept override {
-    if (device_) {
-      device_->stopCapture();
-    }
-  }
-
-  ::pcpp::LinkLayerType getLinkLayerType() noexcept override {
-    device_ = ::pcpp::PcapLiveDeviceList::getInstance().getPcapLiveDeviceByName(interface_name_);
-    if (device_ == nullptr) {
-      ::std::cerr << "Couldn't find device " << interface_name_ << ::std::endl;
-      return ::pcpp::LinkLayerType::LINKTYPE_DLT_RAW1;
-    }
-    
-    if (!device_->open()) {
-      ::std::cerr << "Couldn't open device " << interface_name_ << ::std::endl;
-      return ::pcpp::LinkLayerType::LINKTYPE_DLT_RAW1;
-    }
-
-    return device_->getLinkType();
-  }
-
-private:
-  static void onPacketArrives(::pcpp::RawPacket* raw_packet, ::pcpp::PcapLiveDevice* /*dev*/, void* user_data) {
-    auto* capturer = reinterpret_cast<TrafficCapturer*>(user_data);
-    capturer->processPacket(*raw_packet);
-  }
+ private:
+  static void onPacketArrives(
+      ::pcpp::RawPacket* raw_packet, ::pcpp::PcapLiveDevice* dev, void* user_data) noexcept;
 
   ::std::string interface_name_;
   ::pcpp::PcapLiveDevice* device_;
 };
+
 
 }  // namespace flow_inspector

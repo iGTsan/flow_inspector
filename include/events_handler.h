@@ -12,33 +12,16 @@ namespace flow_inspector {
 
 
 class EventsHandler {
-public:
+ public:
   using EventCallback = ::std::function<void(const internal::Event&)>;
 
-  EventsHandler(Logger& logger) noexcept
-    : logger_{logger}
-  {
-    addEventCallback(internal::Event::EventType::Alert,
-        [this](const internal::Event& event) {
-          logger_.logEvent(internal::LogEntry{
-            .timestamp = logger_.getTime(),
-            .packet = event.packet.copy(),
-            .alert = event.rule.getName(),
-          });
-        });
-  }
+  EventsHandler(Logger& logger) noexcept;
 
-  void addEventCallback(const internal::Event::EventType type, const EventCallback& callback) {
-    callbacks_[type].push_back(callback);
-  }
+  void addEventCallback(const internal::Event::EventType type, const EventCallback& callback) noexcept;
 
-  void addEvent(const internal::Event& event) {
-    for (const auto& callback : callbacks_[event.type]) {
-      callback(event);
-    }
-  }
+  void addEvent(const internal::Event& event) noexcept;
 
-private:
+ private:
   ::std::unordered_map<internal::Event::EventType, ::std::vector<EventCallback>> callbacks_;
   Logger& logger_;
 };

@@ -1,14 +1,16 @@
 #include "gtest/gtest.h"
 #include <gtest/gtest.h>
+
 #include <pcap.h>
+
 #include "EthLayer.h"
+#include "IPv4Layer.h"
 #include "Packet.h"
 #include "PayloadLayer.h"
 #include "TcpLayer.h"
 #include "UdpLayer.h"
+
 #include "content_signature.h"
-
-
 
 
 namespace {
@@ -78,13 +80,6 @@ TEST(ContentSignature, TcpNegative) {
   ::flow_inspector::internal::ContentSignature sig("tcp", "World", flags);
   EXPECT_FALSE(sig.check(tpacket.toPacket()));
 }
-
-// TEST(ContentSignature, TcpRegexNoCase) {
-//   auto tpacket = ::TestPacket::createTcpWithPayload("SecuritY123");
-//   ::std::unordered_set<::std::string> flags = {"nocase"};
-//   ::flow_inspector::internal::ContentSignature sig("tcp", "security[0-9]+", flags);
-//   EXPECT_TRUE(sig.check(tpacket.toPacket()));
-// }
 
 TEST(ContentSignature, UdpPositive) {
   auto tpacket = ::TestPacket::createUdpWithPayload("TestUDPpayload");
