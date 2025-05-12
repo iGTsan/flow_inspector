@@ -15,12 +15,12 @@ SignatureFactory& SignatureFactory::instance() noexcept {
   return factory;
 }
 
-void SignatureFactory::registerSignatureType(const std::string& type, SignatureCreator creator) noexcept {
+void SignatureFactory::registerSignatureType(const ::std::string& type, SignatureCreator creator) noexcept {
   creators_[type] = creator;
 }
 
-std::unique_ptr<internal::Signature> SignatureFactory::createSignature(
-    const std::string& type, const std::string& initString) const noexcept {
+::std::unique_ptr<internal::Signature> SignatureFactory::createSignature(
+    const ::std::string& type, const ::std::string& initString) const noexcept {
   auto it = creators_.find(type);
   if (it != creators_.end()) {
     return (it->second)(initString);
@@ -29,4 +29,4 @@ std::unique_ptr<internal::Signature> SignatureFactory::createSignature(
 }
 
 
-} // namespace flow_inspector::internal
+}  // namespace flow_inspector::internal
